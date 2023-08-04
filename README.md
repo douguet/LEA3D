@@ -12,9 +12,9 @@ LEA3D (Ligand by Evolutionary Algorithm) is designed to create new molecules by 
 Figure 1. General flowchart for LEA genetic algorithm.
 An initial population of candidate solutions is generated, usually, by random process but an option allows to start with a pool of molecules. The fitness of each candidate is evaluated via a fitness function (or score), which takes as input a candidate solution and returns a numeric score. Selection criteria are applied to choose candidates based on their fitness score for breeding. Breeding functions, crossover and mutations (suppress, add, replace or permutate a fragment), are applied to produce new solutions that replace the parent solutions. The cycle (or generation g) continues until convergence criteria is met (usually, solutions are no more improved). 
 
-Here, we provide the core of LEA3D that could be used or modified by adapting new fitness functions and/or libraries of fragments.
+**Here, we provide the core of LEA3D that could be used or modified by adapting new fitness functions and/or libraries of fragments.**
 
-**Documentation**: [Manual-LEA3D-core.pdf](https://github.com/LEA3D/lea3d/main/docs/Manual-LEA3D-core.pdf)
+**Documentation**: [Manual-LEA3D-core.pdf](https://github.com/LEA3D/lea3d/blob/main/docs/Manual-LEA3D-core.pdf)
 
 **Website**: A webserver dedicated to drug design is available at https://chemoinfo.ipmc.cnrs.fr/LEA3D/index.html
 
@@ -46,65 +46,36 @@ Launch Anaconda Prompt, then complete the installation:
 	
 Retrieve and unzip LEA3D repository in your desired folder. See below for running the program **lea3d**. The directory containing executables is called lea3d-main.
 
-## Linux
 
-Install:
+## Run LEA3D
+Create a folder "Project", copy examples from the folder "examples" and launch conda
 
-1. Python3.7 and numpy
-2. Open3D version 0.12.0 (more information at [http://www.open3d.org/docs/release/getting_started.html](http://www.open3d.org/docs/release/getting_started.html))
+ 	conda activate lea3d
+ 	
+**1. Use lea3d to generate 3 molecules using the combination of legos**
+	
+	perl ../lea3d-main/MAIN -v ligand-aspirin.in list_mol_sulfapyridine-aspirin_venetoclax
+ 
+ To visualize the three generated molecules:
+ 
+ 	pymol mol_1.sdf mol_2.sdf mol3.sdf
 
-(Optional) Install additional packages for visualization with PyMOL:
+**2. Use lea3d to design molecules using some aspirin molecular properties**
 
-3. PyMOL (a molecular viewer; more information at [https://pymolwiki.org](https://pymolwiki.org))
+Here, the file ligand-aspirin.func is read (its name is indicated in file ligand-aspirin.in). It contains 4 properties to evaluate (number of atoms, molecular weight, fsp3 value and 2 chemical functions (ester + acid)).
+
+	perl ../lea3d-main/MAIN ligand-aspirin.in
+ 
+ To visualize the best candidate of each generation:
+ 
+ 	pymol VISU/list.sdf
+
   
-Retrieve and unzip SENSAAS-PY repository. The directory containing executables is called sensaas-py-main.
-
-## MacOS
-
-	Not tested
-
-## Run Sensaas
-To align a Source molecule on a Target molecule, the syntax is:
-	
-	sensaas.py sdf molecule-target.sdf sdf molecule-source.sdf slog.txt optim
-	
-Example:
-
-	sensaas.py sdf examples/IMATINIB.sdf sdf examples/IMATINIB_mv.sdf slog.txt optim
-	
-You may have to run the script as follows:
-
-	python sensaas.py sdf examples/IMATINIB.sdf sdf examples/IMATINIB_mv.sdf slog.txt optim
-
-
-Don't worry if you get the following warning from Open3D: "*Open3D WARNING KDTreeFlann::SetRawData Failed due to no data.*". It is observed with conda on 	windows.
-
-## Visualization 
-
-You can use any molecular viewer. For instance, you can use PyMOL if installed (see optional packages) to load the Target and the aligned Source(s):
-
-after aligning IMATINIB_mv.sdf on IMATINIB.sdf using sensaas.py:
-
-	pymol examples/IMATINIB.sdf Source_tran.sdf 
-
-or after executing meta-sensaas.py with several molecules:
-
-	pymol examples/IMATINIB.sdf bestsensaas.sdf catsensaas.sdf
-	
-or after the post-processing:
-
-	pymol examples/IMATINIB.sdf ordered-catsensaas.sdf
-
-
-or after executing meta-sensaas.py with the repeat option (State 1 is Target and State 2 is the aligned Source):
-	
-	pymol examples/VALSARTAN.sdf sensaas-1.sdf
-
 ## Licenses
-SENSAAS code is released under [the 3-Clause BSD License](https://opensource.org/licenses/BSD-3-Clause)
+LEA3D code is released under [the 3-Clause BSD License](https://opensource.org/licenses/BSD-3-Clause)
 
 ## Copyright
-Copyright (c) 2018-2021, CNRS, Inserm, Université Côte d'Azur, Dominique Douguet and Frédéric Payan, All rights reserved.
+Copyright (c) 2018-2021, CNRS, Inserm, Université Côte d'Azur, Dominique Douguet, All rights reserved.
 
 ## Reference
 [Douguet D. and Payan F., SenSaaS: Shape-based Alignment by Registration of Colored Point-based Surfaces, *Molecular Informatics*, **2020**, 8, 2000081](https://onlinelibrary.wiley.com/doi/full/10.1002/minf.202000081). doi: 10.1002/minf.202000081
