@@ -56,7 +56,17 @@ Create a folder called "Project", copy the content of the folder “examples” 
 
 In this example, the file ligand-aspirin.in defines parameters of the genetic algorithm (a population of 10 molecules that will evolve over 30 generations) and indicates the fitness function file to read (ligand-aspirin.func). The fitness function includes 4 properties to evaluate (number of atoms, molecular weight, fsp3 value and the presence of 2 chemical functions (ester + acid)).
 
+Execute:
+
 	perl ../lea3d-main/MAIN ligand-aspirin.in
+
+The file summary.txt indicates the score of candidate molecules of the last generation ranked in descending order. The file edesign.sdf contains all generated molecules over the run. The file VISU/list.sdf contains the best candidate molecule of each generation. The file popopop.txt contains the encoded molecules of the last generation. The file fitmoy.dat allows to plot the maximum, minimum and average scores in function of the generation number.
+
+Plot the maximum, minimum and average scores in function of the generation number
+
+	python ../lea3d-main/plot-scores.py fitmoy.dat
+
+ ![example](/images/plot.png)
  
  To visualize the best candidate of each generation:
  
