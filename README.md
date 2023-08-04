@@ -60,7 +60,7 @@ Execute:
 
 	perl ../lea3d-main/MAIN ligand-aspirin.in
 
-The file summary.txt indicates the score of candidate molecules of the last generation ranked in descending order. The file edesign.sdf contains all generated molecules over the run. The file VISU/list.sdf contains the best candidate molecule of each generation. The file popopop.txt contains the encoded molecules of the last generation. The file fitmoy.dat allows to plot the maximum, minimum and average scores in function of the generation number.
+The file summary.txt indicates the score of candidate molecules of the last generation ranked in descending order. The file edesign.sdf contains all generated molecules over the run. The file VISU/list.sdf contains the best candidate molecule of each generation. The file popopop.txt contains the encoded molecules of the last generation. The file fitmoy.dat allows to plot the maximum, minimum and average scores in function of the generation number. In addition, the file operator.out records the crossover and mutation operations, indicates the difference in score value and which lego is involved (if any). It allows to analyze the efficiency of each operator. Of note, at the end of the run, the list of the privileged legos that improve candidate molecules is indicated.
 
 Plot the maximum, minimum and average scores in function of the generation number
 
@@ -74,22 +74,26 @@ Plot the maximum, minimum and average scores in function of the generation numbe
   
 **2. Use lea3d to generate 3 molecules using the combination of legos**
 In this example, the objective is to build molecules that are already encoded without evaluation of any properties. The file list_mol_sulfapyridine-aspirin_venetoclax contains the encoding for three molecules (one per line) and the file ligand-aspirin.in indicates which library of fragment to use (here, the SDF file called all.sdf from the folder LEGO).
-	
+
+Execute:
+
 	perl ../lea3d-main/MAIN -v ligand-aspirin.in list_mol_sulfapyridine-aspirin_venetoclax
  
  To visualize the three generated molecules:
  
- 	pymol mol_1.sdf mol_2.sdf mol3.sdf
+ 	pymol mol_1.sdf mol_2.sdf mol_3.sdf
 
 **3. Use lea3d to evaluate molecules using the fitness function**
 
-In this example, the objective is to use the program to evaluate the fitness function of a SDF file of molecules. The input file is given as input and the file ligand-aspirin.in indicates the fitness function file to use (ligand-aspirin.func).
+In this example, the objective is to use the program to evaluate the fitness function of a set of molecules. The SDF file of molecules is given as input and the file ligand-aspirin.in indicates the fitness function to use for the evaluation (ligand-aspirin.func).
 
-	perl ../lea3d-main/MAIN -e  ligand-aspirin.in 
+Execute:
+
+	perl ../lea3d-main/MAIN -e ligand-aspirin.in three-molecules.sdf
  
- To visualize the best candidate of each generation:
- 
- 	pymol VISU/list.sdf
+![example](/images/result-lea3d-evaluation.png)
+
+As indicated on the output, molecule number 2 in the sdf file has a score of 100%. This was expected as the aspirin itself is the second molecule of the file three-molecules.sdf. The file summary.txt indicates the score of screened molecules ranked in descending order of score.
 
   
 ## Licenses
