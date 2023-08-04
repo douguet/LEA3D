@@ -9,11 +9,11 @@ Computer-Aided Molecular Design program
 
 **Documentation**: Full documentation is available at [https://github.com/LEA3D/lea3d/blob/main/docs/index.rst](https://github.com/LEA3D/lea3d/blob/main/docs/index.rst)
 
-**Website**: A web demo is available at https://chemoinfo.ipmc.cnrs.fr/LEA3D/index.html
+**Website**: A webserver dedicated to drug design is available at https://chemoinfo.ipmc.cnrs.fr/LEA3D/index.html
 
 ## Requirements
 
-LEA3D uses **Perl scripts along with Python3.7**.
+LEA3D uses **Perl and Python3.7**. Javascripts are only used to create html pages to display results
 
 
 ## Virtual environment for python with conda (for Windows for example)
