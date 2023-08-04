@@ -3,21 +3,17 @@ Computer-Aided Molecular Design program
 
 [![badgepython](https://forthebadge.com/images/badges/made-with-python.svg)](https://www.python.org/downloads/release/python-370/)  [![forthebadge](https://forthebadge.com/images/badges/built-with-science.svg)](https://chemoinfo.ipmc.cnrs.fr/)
 
-**LEA3D** is a de novo design software which allows to optimize the structure of molecules. It is based on the publications [LEA3D: A Computer-Aided Ligand Design for Structure-Based Drug Design](https://pubs.acs.org/doi/10.1021/jm0492296);  [e-LEA3D: a computational-aided drug design web server](https://pubs.acs.org/doi/10.1021/jm0492296)
+**LEA3D** is a de novo design software which allows to optimize the structure of molecules. It is based on the publications: [LEA3D: A Computer-Aided Ligand Design for Structure-Based Drug Design](https://pubs.acs.org/doi/10.1021/jm0492296);  [e-LEA3D: a computational-aided drug design web server](https://pubs.acs.org/doi/10.1021/jm0492296)
 
 ![example](/images/LEA3D.png)
 
-**Documentation**: Full documentation is available at [https://github.com/SENSAAS/sensaas-py/blob/main/docs/index.rst](https://github.com/SENSAAS/sensaas-py/blob/main/docs/index.rst)
+**Documentation**: Full documentation is available at [https://github.com/LEA3D/lea3d/blob/main/docs/index.rst](https://github.com/LEA3D/lea3d/blob/main/docs/index.rst)
 
-**Website**: A web demo is available at https://chemoinfo.ipmc.cnrs.fr/SENSAAS/index.html
-
-**Tutorial**: These [videos](https://www.youtube.com/channel/UC3cjM1j8cQ-95ev0DNxRMOA) on YouTube provide tutorials
+**Website**: A web demo is available at https://chemoinfo.ipmc.cnrs.fr/LEA3D/index.html
 
 ## Requirements
 
-SENSAAS relies on the open-source library [Open3D](http://www.open3d.org). The current release of SENSAAS uses **Open3D version 0.12.0 along with Python3.7**.
-
-Visit the following URL for using Python packages distributed via PyPI: [http://www.open3d.org/docs/release/getting_started.html](http://www.open3d.org/docs/release/getting_started.html) or conda: [https://anaconda.org/open3d-admin/open3d/files](https://anaconda.org/open3d-admin/open3d/files). For example, for windows-64, you can download *win-64/open3d-0.12.0-py37_0.tar.bz2*
+LEA3D uses **Perl scripts along with Python3.7**.
 
 
 ## Virtual environment for python with conda (for Windows for example)
