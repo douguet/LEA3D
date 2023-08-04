@@ -14,7 +14,7 @@ An initial population of candidate solutions is generated, usually, by random pr
 
 **Here, we provide the core of LEA3D that could be used or modified by adapting new fitness functions and/or libraries of fragments.**
 
-**Documentation**: [Manual-LEA3D-core.pdf](https://github.com/LEA3D/lea3d/blob/main/docs/Manual-LEA3D-core.pdf)
+**Documentation**: [Manual-LEA3D-core.pdf](https://github.com/douguet/LEA3D/blob/main/docs/Manual-LEA3D-core.pdf)
 
 **Website**: A webserver dedicated to drug design is available at https://chemoinfo.ipmc.cnrs.fr/LEA3D/index.html
 
