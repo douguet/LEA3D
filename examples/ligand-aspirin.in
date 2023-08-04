@@ -1,0 +1,115 @@
+
+#############################################
+#	Parameters of the Genetic Algorithm
+#############################################
+
+# The maximun number of generations
+GENMAX	30
+
+# The number of molecules in the population
+POP	10
+
+# The maximum number of fragments a molecule may combine
+# analysis on e-Drug3D_1822 reports that synthetic drug is composed by 5.4 fragments 
+# LONGGEN=0 means that there is no constraints (but 10 fragments is still the default maximum)
+#LONGGEN 6
+LONGGEN	0
+
+# Elitism strategy (set the number of parent molecules (the best) 
+# you want to copy to the new generation without alteration) 
+ELITISM	1
+
+
+#############################################
+#	Fitness Function
+#############################################
+
+# Name of the fitness function definition file
+FUNCTION ligand-aspirin.func
+
+
+# Option to convert function evaluation into filtering step
+# if > 0 then means that only molecules possessing score >= SCORE100 % are kept (range[1-100])
+SCORE100 0
+
+
+# Specify the optimization ligand.in (0 or 1)
+OPTIMIS 1
+
+# Specify the maximum number of conformers 
+NBCONF 1
+
+
+# Specify the calculation of charges by using ANTECHAMBER
+# used in properties calculation only (dipole)
+# either by the Gasteiger method 'GAS' (Gasteiger and Marsili, 
+# Tetrahedron, 36, 3219-3288) or 
+# or by AM1-BCC method 'AM1' (Jakalian et al., J. Comp. Chem., 2000, 21, 132-146)
+# '0' means no charge calculation required
+
+#CHARGES 1 AM1
+CHARGES 0 
+#CHARGES 1 GAS
+
+
+# FILTER acts as the command "drug"
+# if you want to skip this step:
+FILTER 0
+# Following command keep all molecules except if not 3D converted and then ionize them
+#FILTER   P  3D  -  -  T  -  I 0
+
+
+#A SCAFFOLD can be imposed either in de novo drug design (lea) or to create a combinatorial 
+#library (lea -r). In the last case, the combinatorial library generator will connect the scaffold
+#to each molecule in GET_POOL.
+#There are 2 ways to indicate the atom(s) to connect:
+#1) in the scaffold sdf file, modify the hydrogen(s) element name 'H' that can be replaced by a 
+#fragment by a 'X' dummy atom.
+#2) or indicate on the same line the atom number where lies the substitution. In the following case 
+#'SCAFFOLD building_block.sdf 5 1', the atoms 5 and 1 can be substituted.
+#Note that the atom no 5 must be a heavy atom connected to a hydrogen. The hydrogen will be 
+#replaced by a fragment.
+#in default case, no scaffold:
+SCAFFOLD 0
+#SCAFFOLD building_block.sdf
+#SCAFFOLD test.sdf 5 1
+
+#To create a combinatorial library (lea -r), a reactant library must be set
+#GET_POOL is a sdf file that contains molecules, each with only 1 'X' dummy atom that indicates
+#the connection site
+#in default case, no GET_POOL:
+GET_POOL  0
+#GET_POOL reactants.sdf
+
+#Starting pool: a file with a molecule / line using the same format as a molecule in LEA3D 
+#(eg: 1*5-3*4_3*1-2*6_2*3-4*1 / 1 2 3 4 ). File example: stemdrug.txt in LEGO dir
+#Importantly: legos must be consistent with the current uploaded library and in the right ORDER
+#(Currently: all.sdf)
+#useful to begin with existing drugs to derive them in new ones
+START 0
+#START stemdrug.txt
+#START popopop.txt
+
+# Output comments 0-3 (but 0 is recommended)
+VERBOSITY 0
+
+
+#############################################
+#	Fragment Database
+#############################################
+
+BASES
+
+# only used in de novo drug design (lea):
+
+# Either put your own sdf file 
+#my_fragments.sdf
+
+# or
+# leave this area empty and lea will selects automaticaly the LEA3D's lego full library 
+#see LEGO/ directory 
+
+#or
+#uncomment some LEGOs from the following list:
+#all.sdf
+

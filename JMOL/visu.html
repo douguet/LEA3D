@@ -1,0 +1,63 @@
+<HTML>
+<HEAD>
+
+<link rel="stylesheet" type="text/css" href="http://chemoinfo.ipmc.cnrs.fr/style.css" title= "Standard" media="screen, print, projection"/>
+
+<script src="./jsmol/JSmol.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+var en;
+var jsmolInfo = {
+	width:350,
+	height:300,
+	color:'#EEEEEE',
+	j2sPath:'jsmol/j2s',
+	use:'HTML5',
+	disableInitialConsole: true
+}
+</script>
+</HEAD>
+
+<BODY>
+
+<TABLE border=0 width="100%">
+<TR height="50" ><TD colspan="2" align="center" >
+<B style="font-size:13px; text-align: center; ">Click on a ligand name (in the right table) to visualize the complex </B>
+</TD>
+</TR>
+
+<TR valign="top">
+<TD style="width:30%">
+<script>
+// note that the variable name MUST match the first parameter in quotes
+jmolApplet0 = Jmol.getApplet("jmolApplet0", jsmolInfo)
+// note that now scripts can be sent immediately after the _Applet object is created
+Jmol.script(jmolApplet0,"background gray;delay 0.5;background black")
+var lastPrompt=0;
+</script>
+<HR ALIGN=LEFT|RIGHT|CENTER SIZE=3>
+<BR>
+<B>Interface control commands:</B><P>
+Rotation: mouse left button <BR>
+Zoom up: shift + mouse left button <BR>
+Visualization option: mouse right button <BR>
+<P>
+<B>To remove hydrogens: mouse right button click, select style menu, then select atoms menu: deselect hydrogens display</B>
+<P>
+Measures (distances, angles and torsions): double click with the mouse left button then click on the other atoms (second: distance, third: angle, fourth: torsion)<BR>  
+<HR ALIGN=LEFT|RIGHT|CENTER SIZE=3>
+</TD>
+
+<TD> <div style="height:800px; overflow:auto;">
+
+<!-- replace below -->
+<!--<a href="javascript:Jmol.loadFile(jmolApplet0,'./caffeine.mol')">load caffeine.mol</a> -->
+
+
+</div>
+</TD>
+
+</TR>
+</TABLE>
+</BODY>
+</HTML>
+

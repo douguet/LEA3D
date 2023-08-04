@@ -1,0 +1,12 @@
+#############################################
+#  MOLECULAR PROPERTIES
+#############################################
+
+# ASPIRIN properties
+
+mw              180     180     1.0
+nbatom          13      13      1.0
+nbhd            0       0       0.0
+nbha            4       4       0.0
+fsp3           0.11     0.11    1.0 
+function        1       1       1.0     ester_acid

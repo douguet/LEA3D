@@ -1,0 +1,2560 @@
+#!/usr/bin/perl
+
+$current_time = localtime;
+#initiation du generateur de nombre aleatoire
+srand(time ^ $$ ^ unpack "%L*", 'ps axww | gzip');
+
+$leaexe=$0;
+#windows requires 2 steps
+$leaexe=~s/MAIN$//;
+$leaexe=~s/\/$//;
+#print "perl scripts in $leaexe\n";
+$platform=$^O;
+print "perl scripts in $leaexe on platform $platform\n";
+# platform = linux  MSWin32
+
+$inputfile='';
+$visubase='';
+$visufgt='';
+$evalfile='';
+$substfile='';
+$inputfileold='';
+
+local($inputfile,$visubase,$visufgt)=@ARGV;
+
+if ($inputfile eq ''){
+	die "\n
+	HELP/INFORMATION : lea -i \n\n";
+};
+
+$leafgt=$leaexe."/LEGO";
+
+# Set in Runlea.csh or Runlea.bash
+#$flexxexe=$ENV{LEA_FLEXX};
+#$convertor=$ENV{LEA_CONVERTOR};
+#$surflexexe=$ENV{LEA_SURFLEX};
+#$plantsexe=$ENV{LEA_PLANTS};
+
+$convertor=$leaexe."/rdkit-confs.py";
+
+$inputfileold=$inputfile;
+$optionlea=""; # empty then launch genetic algorithm by lea else launch option -e, -v, or -r
+
+
+if($inputfile eq "-v"){
+	$optionlea="-v";
+	$inputfile=$visubase;
+	$molecule=$visufgt;
+	die "no fragments ??\n" if(! -e $visufgt || -z $visufgt);
+}
+elsif($inputfile eq "-e"){
+	$optionlea="-e";
+	$inputfile=$visubase;
+	$evalfile=$visufgt;
+	die "FILE $evalfile not found or empty ??\n" if((! -e $evalfile) || (-z $evalfile));
+}
+elsif($inputfile eq "-r"){
+	$optionlea="-r";
+	$inputfile=$visubase;
+};
+
+
+################################################ INFO sur pgm
+
+#$whoami='';
+#chop($whoami = `whoami` );
+#$hostname='';
+#chop($hostname = `hostname` );
+
+if($inputfile eq "-i"){
+
+$text="
+
+########################################################################
+
+                               LEA3D v3.0
+
+########################################################################			       
+
+Ligand by Evolutionary Algorithm
+
+Author: D. Douguet
+
+Further information contact: douguet\@ipmc.cnrs.fr
+
+########################################################################
+
+References:
+
+Douguet D., Munier-Lehmann H., Labesse G. and
+Pochet S., LEA3D: A Computer-Aided Ligand Design for
+Structure-Based Drug Design, J. Med. Chem., 2005, 48, 2457-2468.
+
+Douguet D., Thoreau E. and Grassy G., LEA (Ligand by Evolutionary
+Algorithm): A Genetic Algorithm for the Automated Generation of
+Small Organic Molecules, J. Comput.-Aided  Mol. Design, 2000, 14, 449-466.
+
+########################################################################
+
+For further explanations see manual.pdf in the installation directory
+
+########################################################################
+
+General Command list:
+
+lea -i
+
+lea  	-e      <ligand.in>     <file.sdf>
+
+lea     -r      <ligand.in>
+
+lea     <ligand.in>
+
+lea     -v      <ligand.in>    <file with one molecule per line (e.g.: 1*7-2*4 / 2456 3682)>
+
+
+########################################################################
+\n";
+
+	#system("echo \"$text\" | more $leaexe/Runlea.bash");
+	print "$text";
+	die "\n";
+};	
+
+######################################################## SUBROUTINES
+
+#BOS.pl gather Build Optimis and Score
+require "$leaexe/BOS.pl";
+require "$leaexe/BUILD.pl";
+require "$leaexe/OPTIMIS.pl";
+require "$leaexe/FILTER.pl";
+require "$leaexe/SCORE.pl";
+require "$leaexe/SCALE.pl";
+require "$leaexe/CHILD.pl";
+require "$leaexe/CHEMICAL_FUNCTIONS.pl";
+#require "$leaexe/PHARMACOPHORE.pl";
+require "$leaexe/AUTO_ADAPT.pl";
+#require "$leaexe/DOCKING.pl";
+
+
+# CLEAN directory
+
+unlink "fitmoy.dat" if(-e "fitmoy.dat");
+unlink "scaffold.sdf" if(-e "scaffold.sdf");
+unlink "summary.out" if(-e "summary.out");
+unlink "operators.out" if(-e "operators.out");
+unlink "edesign.sdf" if(-e "edesign.sdf");
+
+############################### INITIALISATION DES PARAMETRES et de la POOL  Lit $inputfile
+
+	print "\n";
+	print ('/'x80);
+	print "\n";
+	print "\n\t\t LEA3D V3.0\n";
+	print "\n";
+	print ('/'x80);
+	print "\n";
+
+	%param=(
+		'UNIX',0,
+		'LINUX',1,
+		'WORKDIR',0,
+		'VERBOSITY',0,
+		'GENMAX',50,
+		'POP',40,
+		'SCALEMAX',6,
+		'SCALEMIN',2,
+		'PROBA_CROSS',30,
+		'PROBA_MUT',70,
+		'ELITISM',0,
+		'LONGGEN',0,
+		'GET_POOL',0,
+		'FILTER',0,
+		'SCAFFOLD',0,
+		'OPTIMIS',0,
+		'NBCONF',0,
+		'FUNCTION',0,
+		'CHARGES',0,
+		'SCORE100',0,
+		'START',0,
+		'LEGODB',1,
+	);
+
+	#2022 new
+        #$param{LEGODB} if set to 1 then if opimischild==1 the mutation operation of type "replace" searches similar lego
+        #can be used only datablocks exist and (eg: lego are generated using LEA3D tools)
+
+	# PARAMETERS that have been stripped from ligand.in
+	#$param{UNIX} and $param{LINUX}
+	#$param{SCALEMAX} and $param{SCALEMIN}
+	#$param{PROBA_CROSS} and $param{PROBA_MUT}
+
+	#$workdir_bis='';
+	#chop($workdir_bis = `pwd` );
+	#$param{WORKDIR}=$workdir_bis;
+	$param{WORKDIR}=".";
+	print "WORKING DIRECTORY : $param{WORKDIR}\n" if($param{VERBOSITY} > 0);
+	
+###############################	LECTURE DES PARAMETRES DE AG
+
+	@bn='';
+	$ibn=0;
+
+	$flag=1;
+	$scaffoldpoints="";
+	$paramdrug=" P 3D - - T - I ";
+	
+	open(PARAM,"<$inputfile");
+	while (<PARAM>){
+		@get = split(' ',$_);
+
+		if ($flag == 0 && $_!~/^#/ && $get[0] ne ''){
+			$bn[$ibn]=$get[0];
+			$ibn++;	
+		};
+
+		if($_=~/^BASES/){
+			$flag=0;
+		};
+
+		if($_=~/^SCAFFOLD/){
+			@get2=@get;
+			$get2[0]="";
+			$get2[1]="";		
+			$scaffoldpoints=join(' ',@get2) if($get[2] ne "");
+		};
+
+		if($_=~/^FILTER/){
+			if($get[1] ne "0"){
+				$len=@get;
+				if($len==9){
+					$paramdrug="$get[1] $get[2] $get[3] $get[4] $get[5] $get[6] $get[7]";
+				}
+				else{	
+					print "Unexpected number of parameters for the keyword FILTER (defaults are set: $paramdrug) !!\n";
+				};	
+			};
+		};
+		
+		if ($_!~/^#/ && $flag && $get[0] ne ''){
+
+			$param{$get[0]}=$get[1];
+
+			$param{FILTER}=1 if($get[0] eq "FILTER" && $get[1] ne "0");
+			$param{SCAFFOLD}='0' if($param{SCAFFOLD} eq '' && $get[0] eq "SCAFFOLD");
+			$param{GET_POOL}='0' if($param{GET_POOL} eq '' && $get[0] eq "GET_POOL");
+
+			$param{START}='0' if($param{START} eq '' && $get[0] eq "START");
+
+			die "GET_POOL $param{GET_POOL} not found or empty ??\n" if($get[0] eq "GET_POOL" && $param{GET_POOL} ne '0' && ((! -e "$param{GET_POOL}") || (-z "$param{GET_POOL}")));
+
+			die "SCAFFOLD $param{SCAFFOLD} not found or empty ??\n" if($get[0] eq "SCAFFOLD" && $param{SCAFFOLD} ne '0' && ((! -e "$param{SCAFFOLD}") || (-z "$param{SCAFFOLD}")));
+
+			if($param{START} ne '0' && ((! -e "$param{START}") || (-z "$param{START}"))){
+				if( (-e "$leaexe/LEGO/$param{START}") && (! -z "$leaexe/LEGO/$param{START}")){
+					$param{START}=$leaexe."/LEGO/".$param{START};
+				}
+				else{
+					die "START $param{START} not found or empty ??\n";
+				};
+			};
+
+			if($_=~/^CHARGES/){
+				if($get[1] == 1 && ($get[2] eq 'GAS' || $get[2] eq 'AM1')){
+					$param{CHARGES}=$get[2];
+				}
+				else{
+					$param{CHARGES}='0';
+				};
+			};
+			#print "$get[0]\t$param{$get[0]} $get[2] $get[3]\n";
+		};
+	};
+	close(PARAM);
+	print "\n";
+
+	$param{LONGGEN} = 10 if($param{LONGGEN} > 10);
+	die "Parameter ELITISM and POP are not compatible with a genetic algorithm\n" if($param{POP} <= $param{ELITISM});
+	die "Parameter POP must be > 0\n" if($param{POP} <= 0);
+	
+
+##################################################################################
+	
+        if(($optionlea eq "-e" || $optionlea eq "") && ($param{FUNCTION} eq '' || $param{FUNCTION} eq '0')){
+        	die "FUNCTION file not found ????\n";
+        };
+
+
+################################ Program d'EVALUATION
+# option -e 
+
+	if($optionlea eq "-e"){
+
+		#read the $evalfile, save datablock and sdf into global memory
+		$memoi=-1;
+		$flagnew=1;
+		open(PARAM,"<$evalfile");
+		while (<PARAM>){
+			if ($flagnew){
+				$flagnew=0;
+				$memoi++;
+				# global memory
+				$memo_gi[$memoi]=$memoi;		 	
+				$memo_gen[$memoi]=0;
+				$memo_mol[$memoi]=1;
+				$memo_molping[$memoi]=$memoi;
+				$memo_datablock[$memoi]="";
+				$memo_remark[$memoi]="";
+				$memo_conf[$memoi]=1;
+				$memo_nbconf[$memoi]=1;
+				$memo_score[$memoi]=0;
+				$memo_properties[$memoi]="";
+				$memo_rank[$memoi]=0;
+				$memo_sdf[$memoi]="";
+				$memo_mol2[$memoi]="";
+			};
+			$conv2=$_;
+			$flagpoint=1 if($conv2 =~/^>/);
+			if($conv2 =~/\$\$\$\$/){
+				$flagnew=1;
+				$flagpoint=0;
+			};	
+			if($flagpoint){
+				$memo_datablock[$memoi]=$memo_datablock[$memoi].$_;
+			}
+			else{
+				$memo_sdf[$memoi]=$memo_sdf[$memoi].$_; #original sdf ie $memo_conf[$memoi]==0
+			};	
+		};
+		close(PARAM);	
+		$nbevalfile=@memo_gi;
+		
+		#&memo_print(0,1,$nbevalfile,"");
+	};
+	
+
+	
+################################ PRINT DES PARAMETRES DE LEA
+	
+if($optionlea eq "" || $optionlea eq "-e" || $optionlea eq "-r"){
+
+	print "\n";
+	print "PARAMETERS : \n\n";
+	
+	if($optionlea eq ""){
+	print "Genetic algorithm: $param{GENMAX} generations of $param{POP} molecules (composition with LONGGEN=$param{LONGGEN})\n";
+	print "Genetic algorithm: Mutation probability=$param{PROBA_MUT} and Crossover probability=$param{PROBA_CROSS}\n";
+	#print "Genetic algorithm: Selection pressure [$param{SCALEMIN} - $param{SCALEMAX}] and elitism=$param{ELITISM}\n";
+       	print "Genetic algorithm: elitism=$param{ELITISM}\n";
+	print "Genetic algorithm: obligate fragment $param{SCAFFOLD}\n" if($param{SCAFFOLD} != 0); 
+	print "Use the initial population $param{START}\n" if($param{START} ne '0');
+	print "\n";
+	};	
+	
+	print "Function from $param{FUNCTION}\n";
+	print "Use $param{GET_POOL} to react with SCAFFOLD\n" if($param{GET_POOL} != 0);
+
+	$convertor2=$convertor;
+	$convertor2=~s/(.*)\/(.*)/$2/;
+	print "Use 3D generator program $convertor2\n" if($param{OPTIMIS}==1);
+
+	print "Conformers: up to $param{NBCONF}\n" if($param{OPTIMIS}==1);
+	print "No optimization\n" if($param{OPTIMIS}==0);
+	print "Charge calculation $param{CHARGES}\n" if($param{CHARGES} != 0);
+        print "Filtering and ionization step: $paramdrug\n" if($param{FILTER}==1);
+	print "No FILTER\n" if($param{FILTER}==0);	
+	print "Discard molecule if score < $param{SCORE100} %\n" if($param{SCORE100}>0);
+	print "Verbosity=$param{VERBOSITY}\n";
+		
+	if($param{VERBOSITY} >= 1){
+		@clefs= keys %param;
+		@valeurs= values %param;
+		foreach $i (0..@clefs){
+			print "$clefs[$i] \t $valeurs[$i]\n";
+		};
+	};	
+};
+
+################################ Program click reactants on a scaffold
+# option -r
+
+	if($param{SCAFFOLD} ne '0' && $param{GET_POOL} ne '0' && $optionlea eq "-r"){
+		if(!-e "$param{GET_POOL}" || -z "$param{GET_POOL}"){
+			die "Error in option -r: $param{GET_POOL} not found !\n";
+		}
+		else{
+			#Check for X dummy atoms
+			chop($rep=`grep 'X' $param{GET_POOL} | wc -l`);
+			$rep=~s/ //g;
+			if($rep eq "" || $rep==0){
+				die "Error in option -r: $param{GET_POOL} does not contain X anchors\n";
+			}
+			else{
+				#chop($rep=`$leaexe/GET_X.pl $param{GET_POOL}`);
+				#rename "new_$param{GET_POOL}", $param{GET_POOL};
+				&getx($param{GET_POOL},"getx.sdf");
+				rename "getx.sdf", $param{GET_POOL};
+			};
+
+			$param{LONGGEN}=2;
+			$param{GENMAX}=0;
+			#chop($nbconformer = `$leaexe/NBSDF.pl $param{GET_POOL}`);
+			$nbconformer=&nbsdf($param{GET_POOL});
+			$param{POP}=$nbconformer;
+		};
+	}
+	elsif($optionlea eq "-r"){
+		die "Error in option -r: you need to set GET_POOL and SCAFFOLD\n";
+	};	
+
+
+################################ CHECK LEGO LIBRARIES	
+
+if($optionlea eq "" || $optionlea eq "-v" || $optionlea eq "-r"){
+	
+	if($optionlea eq "" || $optionlea eq "-v"){
+		print "\nBASES : \n";
+        
+		if($bn[0] eq ""){
+			print "no fragment database have been selected. Get LEGO from eDESIGN:\n";
+			if($platform eq "linux" || $platform eq "darwin"){
+				chop($tmp=`ls $leafgt/*.sdf`);
+				#print "$tmp\n";
+			}
+			else{
+				$tmp="$leafgt/all.sdf";
+			};
+			@getbase=split(' ',$tmp);
+			$ibn=0;
+			foreach $i (0..@getbase-1){
+				if(-e $getbase[$i]){
+					$bn[$ibn]=$getbase[$i];
+					$ibn++;
+				};	
+			};
+		};
+
+	}
+	elsif($optionlea eq "-r"){
+		@bn="";
+		$ibn=0;
+		$bn[$ibn]=$param{GET_POOL};
+		$ibn++;
+		print "\nGET POOL:\n";
+	};	
+
+#Add frequencies information (frequencies.txt) if read $leafgt/all.sdf
+	@legofreq=""; # used if frequencies exist (eg: frequencies.txt for all.sdf)
+	$sumfreq=0;
+	if($ibn==1 && $bn[0]=~/all\.sdf/ && -e "$leafgt/frequencies.txt"){
+		$fi=1;
+		open(PARAM,"<$leafgt/frequencies.txt");
+		while(<PARAM>){
+			@get = split('\n',$_);
+			$legofreq[$fi]=$get[0];
+			$sumfreq=$sumfreq+$get[0];
+			$fi++;
+		};
+		close(PARAM);
+		$fi=$fi-1;
+	};
+
+	@lego="";
+	@legono="";
+	@typelego="";#nb of X
+	@points="";
+	@legodatablock="";
+
+	#read lego datablocks <GC>
+	@legogc="";
+	#read lego datablocks <ncycles> <natomescycle> <cyclearom> <nhetat> <ARcenter> <LIPcenter> <nbringar> <natomes> <nrotatable>
+	@legoc="";#number of rings
+	@legonba="";#number of atoms
+	@legolip="";#lip center of mass (if not then it exists an ar center of mass (exclusive))
+
+	$legoi=1; # position 0 is allocated to the submitted scaffold if any
+       	
+	$bnmol=0;
+	$singlea=0;
+	$multiplea=0;
+
+	foreach $i (0..@bn-1){
+		if((!-e "$param{WORKDIR}/$bn[$i]") && (!-e "$leaexe/LEGO/$bn[$i]") && (!-e "$bn[$i]")){
+			die "Library $bn[$i] not found ! \n";
+		}
+		elsif(-e "$param{WORKDIR}/$bn[$i]"){
+			open(PARAM,"<$bn[$i]");
+			$legointernes="";
+		}
+		elsif(-e "$bn[$i]"){
+			open(PARAM,"<$bn[$i]");
+			$legointernes="";
+		}
+		else{
+			open(PARAM,"<$leaexe/LEGO/$bn[$i]");
+			$legointernes="$leaexe/LEGO/";
+		};
+		$flagnew=1;		
+		$legonoi=0;
+		while(<PARAM>){
+			if ($flagnew){
+				$bnmol++;
+				$flagnew=0;
+				$flagpoint=0;
+				$flagpointdatablock=0;
+				$register=0;
+				$flaggc=0;#if GC (Ghose and Crippen atom types)
+				$flagc=0;#number of rings
+                                $flagnba=0;#number of atoms
+                                $flaglip=0;#x coordinate of lip center of mass (acyclic only)
+				$legonoi++;
+			};
+			$conv2=$_;
+			if($flaggc && ($conv2!~/^>/ && $conv2 ne "")){
+				@get = split('\n',$_);
+				$legogc[$legoi]=$get[0];
+				$flaggc=0;
+			};
+			if($flagc && ($conv2!~/^>/ && $conv2 ne "")){
+                                @get = split('\n',$_);
+                                $legoc[$legoi]=$get[0];
+                                $flagc=0;
+                        };
+                        if($flagnba && ($conv2!~/^>/ && $conv2 ne "")){
+                                @get = split('\n',$_);
+                                $legonba[$legoi]=$get[0];
+                                $flagnba=0;
+                        };
+			if($flaglip && ($conv2!~/^>/ && $conv2 ne "")){
+                                @get = split('\n',$_);
+                                $legolip[$legoi]=$get[0];
+                                $flaglip=0;
+                        };
+		       	if($flagpoint && ($conv2!~/^>/ && $conv2 ne "")){
+				@get = split(' ',$_);
+				@getpoint=split('-',$get[0]);
+				$nbpoints=@getpoint;
+				if($nbpoints > 0){
+					$points[$legoi]=join(" ",@getpoint);
+					$points[$legoi]=" ".$points[$legoi]." ";
+					$typelego[$legoi]=$nbpoints;
+					$lego[$legoi]=$legointernes.$bn[$i];
+					$legono[$legoi]=$legonoi;
+					$singlea++ if($nbpoints == 1);
+					$multiplea++ if($nbpoints > 1);
+					print "Register $legoi library file sdf $lego[$legoi] no $legono[$legoi] number of anchors = $typelego[$legoi] points -$points[$legoi]-\n" if($param{VERBOSITY} > 0);
+					#$legoi++;
+					$register=1;
+					$flagpoint=0;
+				};	
+			};	
+			$flagpoint=1 if($conv2 =~/POINTS/ && $conv2 =~/^>/);	
+			$flagpointdatablock=1 if($conv2 =~/^>/);
+			$flagpointdatablock=0 if($conv2 =~/POINTS/);
+			$flaggc=1 if($conv2 =~/<GC>/ && $conv2 =~/^>/);
+			$flagc=1 if($conv2 =~/<ncycles>/ && $conv2 =~/^>/);
+                        $flagnba=1 if($conv2 =~/<natomescycle>/ && $conv2 =~/^>/);
+                        $flagnba=1 if($conv2 =~/<natomes>/ && $conv2 =~/^>/);
+                        $flaglip=1 if($conv2 =~/<LIPcenter>/ && $conv2 =~/^>/);
+			if($conv2 =~/\$\$\$\$/){
+				$flagpointdatablock=0;
+				#print "Warning: legogc $legoi null\n" if($legogc[$legoi]!~/\d/);
+				$legoi++;
+				$flagnew=1;	
+				if($register==0){
+					print "Registering molecule no $bnmol from $legointernes $bn[$i] failed\n" if($param{VERBOSITY} > 0);
+				};
+			};	
+			if($flagpointdatablock && $optionlea eq "-r"){
+				$legodatablock[$legoi]=$legodatablock[$legoi].$_;
+			};	
+		};
+		close(PARAM);
+	};
+	$legoi=$legoi-1;	
+	if($legoi == 0){
+		die "No Fragments !! Please select at least one fragment database (sdf file with datablock <POINTS>) under the keyword BASES in the input file .inp\n";
+	}
+	else{
+		if($fi==$bnmol){
+			print "$bnmol molecules read with associated frequencies (frequencies.txt, sum=$sumfreq), $legoi fragments (single anchor = $singlea ; multiple anchors = $multiplea)\n";
+		}
+		else{
+			$sumfreq=0;
+			print "$bnmol molecules read, $legoi fragments (single anchor = $singlea ; multiple anchors = $multiplea)\n";
+		};
+	};	
+
+};
+	
+
+################################# SCAFFOLD: case of one obligate fragment
+# option SCAFFOLD
+ 	
+	if(($optionlea eq "" || $optionlea eq "-r" || $optionlea eq "-v") && $param{SCAFFOLD} ne '0'){
+
+		print "\nSCAFFOLD:\n";
+
+		if($scaffoldpoints eq ""){
+			#perhaps <POINTS>
+			chop($rep=`grep 'POINTS' $param{SCAFFOLD} | wc -l`);
+			$rep=~s/ //g;
+			if($rep eq "" || $rep==0){
+				#perhaps X dummy atoms ?
+				#chop($rep=`$leaexe/GET_X.pl $param{SCAFFOLD}`);		
+				#rename "new_$param{SCAFFOLD}", $param{SCAFFOLD};
+				&getx($param{SCAFFOLD},"getx.sdf");
+				rename "getx.sdf", $param{SCAFFOLD};
+				print "Search for 'X' and update POINTS $param{SCAFFOLD}\n";
+			};	
+		};
+
+		$nbscaffold=0;
+		$print=0;
+		$flagpoints=0;
+		open(IN2,"<$param{SCAFFOLD}");
+		open(INS,">scaffold.sdf"); 
+		
+		# if -r:
+		# accept several scaffold with same numbering scheme e.g. product of round 0 with same scaffold for all products (lea writes scaffold first in the sdf so the numbering scheme is maintained)
+		
+		$scaffoldpointso=$scaffoldpoints;
+		while(<IN2>){
+			$print=1 if($_ =~/^>/);
+			if ($_=~/\$\$\$\$/){
+				$nbscaffold++;
+				if($scaffoldpoints ne ""){
+					@pointsscaff=split(' ',$scaffoldpoints);
+					$tmppoints=join('-',@pointsscaff);
+					print "write $tmppoints into scaffold.sdf (compound no $nbscaffold)\n" if($param{VERBOSITY} > 0);
+					print INS "> <POINTS>\n";	
+					print INS "$tmppoints\n\n";
+					print INS "\$\$\$\$\n";
+
+					$nbpoints=@pointsscaff;
+					print "scaffold.sdf with $nbpoints anchors\n";
+					if($optionlea eq "-r" && $nbpoints > 1){
+						die "Error in option -r: more than one anchor points (=$nbpoints) (X dummy atom) in SCAFFOLD (compound no $nbscaffold). That may produce the wrong product\n";
+					};
+				
+					if($nbscaffold==1){
+						$lego[0]="scaffold.sdf";
+						$points[0]=$scaffoldpoints;
+						$typelego[0]=$nbpoints;
+						$legono[0]=1;
+						$singlea++ if($nbpoints == 1);
+						$multiplea++ if($nbpoints > 1);
+						print "SCAFFOLD Register 0 library file sdf $lego[0] no $legono[0] number of anchors = $typelego[0] points -$points[0]-\n" if($param{VERBOSITY} > 0);
+					}
+					else{
+						# do not update $legoi (refered to the number of lego in @lego)
+						# $legoi++
+						 
+						$indicelego=@lego;
+						$lego[$indicelego]="scaffold.sdf";
+						$points[$indicelego]=$scaffoldpoints;
+						$typelego[$indicelego]=$nbpoints;
+						$legono[$indicelego]=$nbscaffold;
+						
+						# do not update $singlea neither $multiplea
+						#$singlea++ if($nbpoints == 1);
+						#$multiplea++ if($nbpoints > 1);
+						
+						print "SCAFFOLD Register $indicelego library file sdf $lego[$indicelego] no $legono[$indicelego] number of anchors = $typelego[$indicelego] points -$points[$indicelego]-\n" if($param{VERBOSITY} > 0);
+					};
+				}
+				elsif($scaffoldpoints eq ""){
+					die "no POINTS neither in $param{SCAFFOLD} (compound no $nbscaffold) nor in parameter SCAFFOLD\n";
+				}
+				elsif($nbscaffold == 2 && $optionlea eq "-r"){
+					print "Warning: several scaffolds in $param{SCAFFOLD}: each of them will be combined !\n";
+				}
+				elsif($nbscaffold == 2){
+					print "Warning: several scaffolds in $param{SCAFFOLD}: only the first one selected !\n";
+				};	
+				if($optionlea eq "-r"){
+					$print=0;
+					$scaffoldpoints="" if($scaffoldpointso eq "");
+				}
+				else{
+					$print=1;
+				};	
+			}
+			elsif($print==0){
+				print INS "$_";
+			};
+			
+			if($flagpoints && $scaffoldpoints eq ""){
+				@get=split(' ',$_);
+				@getpoint=split('-',$get[0]);
+				$scaffoldpoints=join(' ',@getpoint);
+				$flagpoints=0;
+			};	
+			$flagpoints=1 if($_ =~/^>/ && $_ =~/POINTS/);
+		};
+		close(IN2);
+		close(INS);
+	};
+
+################################# Program to build one molecule from fragment numbers
+# option -v
+ 
+	if($optionlea eq "-v"){
+		$gi=0;
+		open(INS,"<$molecule");
+		while(<INS>){
+			$_=~s/\n$//;
+			@get=split('\/',$_);
+			$get[0]=~s/ //g;
+			$mol[$gi]=$get[0];
+			$molping[$gi]=$get[1];
+			#print "$mol[$gi]\n";
+			#print "$molping[$gi]\n";
+			$gi++;
+		};
+		close(INS);
+		print "\n";
+		foreach $gi (0..@mol-1){
+			$moleculei=$gi;
+			$nomtab="parent";
+			&build;
+			$gi2=$gi+1;
+			if(-e "mol.sdf" && !-z "mol.sdf"){
+				rename "mol.sdf", "mol_$gi2.sdf";
+				print "$molecule($gi2) $mol[$gi] / $molping[$gi] : see mol_$gi2.sdf\n";
+			}
+			else{
+				print "Building $molecule($gi2) failed\n";
+			};	
+		};	
+		die "Molecules are in mol_*.sdf\n";
+	};
+
+
+###################################### Check compatibility with LONGGEN
+	
+if($optionlea eq ""){
+	
+	if($param{SCAFFOLD} eq '0'){
+		if($multiplea == 0 && $param{LONGGEN} > 2 ){
+			die ("No multi-substituents fragments and LONGGEN > 2 are incompatibles parameters !\n");
+		};   	
+        
+		if($multiplea == 0 && $param{LONGGEN} ==0){
+                	print "Warning LONGGEN set to 2 because No multi-substituents fragments and LONGGEN > 2 are incompatibles parameters !\n";
+        		$param{LONGGEN}=2;
+		};
+		
+	}
+	else{ # $param{SCAFFOLD} set with one or more anchors !
+		@pointsscaff=split(' ',$scaffoldpoints);
+		$tmppoints=join('-',@pointsscaff);
+		if($multiplea ==1 && $tmppoints > 1 && $tmppoints < ($param{LONGGEN}-1) && $param{LONGGEN} > 0){ #$multiplea==scaffold
+                	die ("only scaffold as multi-substituents fragment and LONGGEN is too high compared to the number of anchors\n");
+        	}
+		elsif($param{LONGGEN} ==0 && $multiplea ==1 && $tmppoints==1){
+			$param{LONGGEN}=2;
+			print "Warning LONGGEN set to 2 because only scaffold as multi-substituents fragment with $tmppoints anchor\n";
+		}
+		elsif($param{LONGGEN} ==0 && $multiplea ==1){
+			$param{LONGGEN}=$tmppoints+1;
+			$param{LONGGEN}=10 if($param{LONGGEN} > 10);
+			print "Warning LONGGEN set to $param{LONGGEN} because only scaffold as multi-substituents fragment with $tmppoints anchors\n";
+		};
+	};
+
+};	
+	
+###################################### READ FUNCTION parameters
+
+
+	  %prop=(
+	        'dock',0.0,
+	        'gnp',0.0,
+                'psa',0.0,
+                'volume',0.0,
+                'area',0.0,
+                'mm',0.0,
+                'logp',0.0,
+                'mr',0.0,
+                'rg',0.0,
+                'ix',0.0,
+                'iy',0.0,
+                'iz',0.0,
+                'length',0.0,
+                'nbhd',0.0,
+                'nbha',0.0,
+                'nbatom',0.0,
+                'dipole',0.0,
+                'solubility',0.0,
+                'function',0.0,
+                'lipinski',0.0,
+                'pharm',0.0,
+                'rot',0.0,
+                'nring',0.0,
+                'nringa',0.0,
+                'fingerprint',0.0,
+		'shape',0.0,
+		'exactmatch',0.0,
+	);		
+	
+	die "FILE $param{FUNCTION} do not exists\n" if(! -e $param{FUNCTION} && ($optionlea eq "-e" || $optionlea eq ""));
+			
+		@fprop='';
+                @fmin='';
+                @fmax='';
+                @fw='';
+
+                $i=0;
+                $flagdock_apolar_sas=0;
+                $rmsdock=5;  # distance site actif > 5 A alors score de 0
+
+		$docki=0;
+		$docking_program="FLEXX"; #default
+		@protfmin='';
+		@protfmax='';
+		@protfw='';
+                @prot='';
+                @site='';
+                @refx='';
+                @refy='';
+                @refz='';
+                @rmsdock='';
+                @limitscore='';
+                @file_bat='';
+                @specificity='';
+
+                @interaction='';
+                @interactionif='';
+                @mininteraction='';
+                @maxinteraction='';
+                $interaci=0;
+
+		# used by $leaexe/interactpdbmol2 to print interactions up to $distmaxinteract
+                $distmaxinteract=20.0; 
+		
+		# charges bumping 
+                $distchargebumping="";
+
+		$fingerref="";
+
+		$evaluate_prop=0;
+		$evaluate_finger=0;
+		$evaluate_dock=0;
+		$evaluate_pharm=0;
+		$evaluate_function=0;
+		$evaluate_shape=0;
+		$evaluate_exactmatch=0;
+
+		#default
+		#$evaluate_prop=1;
+
+		$textpharm="";
+
+                open(PARAM,"<$param{FUNCTION}");
+		while (<PARAM>){
+	                @get = split(' ',$_);
+			
+			if($get[0] ne '' && $get[0]!~/^#/ && $get[0] ne "interaction" && $get[3] > 0){
+
+                                        $get[0]='mm' if($get[0] eq 'mw');
+
+                                        $fprop[$i]=$get[0];
+
+                                        $fmin[$i]=$get[1];
+                                        $fmin[$i]="" if($fmin[$i] eq "-");
+
+                                        $fmax[$i]=$get[2];
+                                        $fmax[$i]="" if($fmax[$i] eq "-");
+
+                                        $fw[$i]=$get[3];
+
+					$evaluate_prop=1 if($get[0] eq "psa" || $get[0] eq "volume" || $get[0] eq "area" || $get[0] eq "mm" || $get[0] eq "logp" || $get[0] eq "fsp3" || $get[0] eq "complexity" || $get[0] eq "mr" || $get[0] eq "rg" || $get[0] eq "ix" || $get[0] eq "iy" || $get[0] eq "iz" || $get[0] eq "length" || $get[0] eq "nbhd" || $get[0] eq "nbha" || $get[0] eq "nbatom" || $get[0] eq "dipole" || $get[0] eq "solubility" || $get[0] eq "lipinski" || $get[0] eq "rot" || $get[0] eq "nringa" || $get[0] eq "nring");
+
+                                        if($get[0] eq 'fingerprint'){
+	                         	       $simdescriptor=$get[4];
+		                               $fingerref=$get[6];
+			                       $simmeasure=$get[5];
+					       $evaluate_finger=1;
+				        };
+			
+					if($get[0] eq 'shape'){
+						$shaperef=$get[4];
+						$shapescore=$get[5];
+						$evaluate_shape=1;
+					};
+					
+					if($get[0] eq 'exactmatch'){
+						$evaluate_exactmatch=1;
+						$exactmatchref=$get[4];
+					};
+							
+					if($get[0] eq 'function'){
+                                                $fprop[$i]="function";
+                                                $listefonction=$get[4];
+                                                $fmin[$i]=1;
+                                                $fmax[$i]=1;
+						$evaluate_function=1;
+					};
+
+                                        if($get[0] eq 'lipinski'){
+                                                $fmin[$i]=1;
+                                                $fmax[$i]=1;
+					};
+
+                                        if($get[0] eq 'pharmacophore'){
+						$evaluate_pharm=1;
+                                                $fprop[$i]="pharm";
+                                                $fmin[$i]=1;
+                                                $fmax[$i]=1;
+                                                $get[0]="";
+                                                $get[1]="";
+                                                $get[2]="";
+                                                $get[3]="";
+                                                $listepharm=join(' ',@get);
+						$textpharm="Pharmacophore:\n";
+						@getvacpharm1='';						
+						@getvacpharm2='';
+						@getvacmin='';
+						@getvacmax='';
+						@getvac=split(' ',$listepharm);
+						$pharmj=3;
+						$pharmk=0;
+						foreach $pharmi (0..@getvac-1){
+							if($pharmi == ($pharmj-3) && $getvac[$pharmi] ne "" && $getvac[$pharmi+1] ne "" && $getvac[$pharmi+2] ne "" && $getvac[$pharmi+3] ne ""){
+								$getvacpharm1[$pharmk]=$getvac[$pharmi];
+								$getvacpharm2[$pharmk]=$getvac[$pharmi+1];
+								$getvacmin[$pharmk]=$getvac[$pharmi+2];
+								$getvacmax[$pharmk]=$getvac[$pharmi+3];
+								$pharmj=$pharmj+4;
+								$pharmk++;
+								$textpharm=$textpharm."Pairwise $pharmk: $getvac[$pharmi] $getvac[$pharmi+1] with [$getvac[$pharmi+2] <= d <= $getvac[$pharmi+3]]\n";
+								
+							};	
+						};
+						print "\n";
+					};
+					
+					if($fprop[$i] eq 'gnp' && $fw[$i] != 0){
+						$flagdock_apolar_sas=1; # flag necessaire pour plus tard !
+					};
+
+					if($fprop[$i] =~/dock/ && $fw[$i] != 0 && $fprop[$i] ne 'gnp'){
+						$evaluate_dock=1;
+
+						if($get[4] eq '' || $get[5] eq '' || $get[6] eq '' ||  $get[7] eq '' || $get[8] eq '' || $get[9] eq '' || $get[10] eq ''){
+							die "Il manque des parametres pour la fonction docking $get[0] : \ndock -60 0  0.0 protein.pdb  site.pdb refx refy refz tolerance_radius  minimum_flexx_score file.bat(or '-')\n";
+						};
+						
+						if($docki > 0 && $get[12] eq ''){
+							die "No defined specificity for $get[4]: must be set relative to the first dock $prot[0] (ie AND, OR, NOT) ! \n";
+						};	
+
+						$protfmin[$docki]=$get[1];
+						$protfmax[$docki]=$get[2];
+						$protfw[$docki]=$get[3];
+						
+                                                $prot[$docki]=$get[4];
+                                                $site[$docki]=$get[5];
+                                                $refx[$docki]=$get[6];
+                                                $refy[$docki]=$get[7];
+                                                $refz[$docki]=$get[8];
+                                                $rmsdock[$docki]=$get[9];
+                                                $limitscore[$docki]=$get[10];
+                                                $file_bat[$docki]=$get[11];
+
+                                                $file_bat[$docki]='' if($file_bat[$docki] eq '-');
+                                                $specificity[$docki]=$get[12] if($docki > 0);
+						$specificity[$docki]=~tr/[a-z]/[A-Z]/;
+
+                                                @getnp=split('\.',$prot[$docki]);
+						$protdir[$docki]=$getnp[0];
+                                                if(-e "$protdir[$docki]"){
+							system("rm -rf $protdir[$docki]");
+							system("mkdir $protdir[$docki]");
+						}
+						else{
+							system("mkdir $protdir[$docki]");
+						};
+						
+						#DISABLED if($docki==0){
+							# Calcul de la surface accessible au solvant
+							# sub sas_protein in DOCKING.pl
+							# change to area (ASA) dec 2004
+							#&sas_protein($prot[0]);
+							#$prot_arearef=$prot_area;
+							#print "\nProtein: area = $prot_arearef\n\n";
+						#};
+						
+						if($docki>0){
+							$fprop[$i]="";
+							$fmin[$i]="";
+							$fmax[$i]="";
+							$fw[$i]="";
+							
+							$i=$i-1;#$fprop must have only one dock
+						};	
+						
+						$docki++;
+					};						
+											
+					$i++;
+				}
+				elsif($get[0] eq "interaction" && $_=~/ PROT_/ && $_=~/ LIG_/){
+					$interactionif[$interaci]=1 if($_=~/ IF / || $_=~/ if /);
+                                        $maxinteraction[$interaci]=3.1 if($_!~/DIST_MAX_/);
+                                        $mininteraction[$interaci]=0.0 if($_!~/DIST_MIN_/);
+                                        foreach $ini (1..@get-1){
+						if($get[$ini]=~/DIST_MAX_/){
+                                                        $maxinteraction[$interaci]=$get[$ini];
+                                                        $maxinteraction[$interaci]=~s/DIST_MAX_//g;
+                                                        $distmaxinteract=$maxinteraction[$interaci] if($maxinteraction[$interaci] > $distmaxinteract);
+						}
+						elsif($get[$ini]=~/DIST_MIN_/){
+                                                        $mininteraction[$interaci]=$get[$ini];
+                                                        $mininteraction[$interaci]=~s/DIST_MIN_//g;
+						}
+						else{
+							$interaction[$interaci]=$interaction[$interaci]." $get[$ini] " if($get[$ini] ne "IF" && $get[$ini] ne 'if');							
+						};
+					};
+					$interaci++;
+				}
+				elsif($get[0] eq "interaction" && $get[1]=~/chargebump/ && $get[2]=~/\d/ ){
+					$distchargebumping=$get[2];
+					print "Charges bumps if distance between ASP,GLU and ligand(O.co2) <= $distchargebumping\n";
+				}
+				elsif($get[0] eq "DOCKING_PROGRAM" && $get[1] eq "SURFLEX"){
+					$docking_program="SURFLEX";
+				}
+				elsif($get[0] eq "DOCKING_PROGRAM" && $get[1] eq "PLANTS"){
+					$docking_program="PLANTS";
+				}	
+				elsif($get[0] eq "DOCKING_PROGRAM" && $get[1] ne ""){
+					$docking_program="FLEXX";
+				};	
+		};
+		close(PARAM);
+
+		print "\n";	
+		print ('|'x80);
+		print "\n\n";
+		print "FUNCTION :\n";
+
+		$sumw=0;
+		foreach $prop (0..@fprop-1){
+			$sumw=$sumw+$fw[$prop];
+		};	
+		die "All weights in $param{FUNCTION} are zero !\n" if($sumw==0 && ($optionlea eq "" || $optionlea eq "-e"));
+		print "Warning lea -r: all weights in $param{FUNCTION} are zero ! molecules will not be evaluated !\n" if($optionlea eq "-r");
+
+	if($sumw != 0){
+
+		$nbpre_fonction=0;
+		$sumnbpre_fonction=0;
+		$nbpre_fonctiondock=0;
+		foreach $prop (0..@fprop-1){
+			if ($fw[$prop] != 0.0){
+				$fwpourcent=($fw[$prop]/$sumw)*100;
+				if($fprop[$prop]!~/dock/){
+					print "$fprop[$prop]\t[$fmin[$prop],$fmax[$prop],$fw[$prop]]\t: $fwpourcent%\n";
+					$nbpre_fonction++ if($fprop[$prop] ne 'gnp');
+					$sumnbpre_fonction=$sumnbpre_fonction+$fw[$prop] if($fprop[$prop] ne 'gnp');
+				}
+				else{
+					print "Docking program set: $docking_program\n";
+					print "dock into $prot[0]\t[$fmin[$prop],$fmax[$prop],$fw[$prop]]\t: $fwpourcent%\n";
+					#print "entre plusieurs fprop dock\n";
+					$nbpre_fonctiondock=1;
+				};	
+			};
+		};
+		if($nbpre_fonctiondock){
+			print "\n";
+			foreach $docki (1..@prot-1){
+				print "Specificity $specificity[$docki] with $prot[$docki] only the boundary value $limitscore[$docki] is used to accept or discard the conformer\n";
+			};
+		};
+		
+		$fwpourcent=sprintf"%3.2f",$fwpourcent;
+		$sumnbpre_fonctionpc=sprintf"%3.2f",($sumnbpre_fonction/$sumw)*100;
+		print "\nSum of weigth = $sumw (100%) with $sumnbpre_fonction ($sumnbpre_fonctionpc %) for non docking properties\n\n";
+		print "$textpharm\n\n" if($evaluate_pharm);
+		print ('|'x80);	
+		print "\n\n";
+	
+	}; #if($sumw != 0){	
+
+
+###################################### CREATION DES INDIVIDUS
+
+	
+	@mol='';#connectivity between fgt1, fgt2, 3 4 5 ... 
+	@molping=""; #corespondance between fgt i from mol and no lego 
+	
+	#if($param{GET_POOL} eq '0' && $optionlea eq ""){
+	if($optionlea eq "" && $param{START} eq '0'){	
+		print"\n";
+		print "Random initialisation of the population :\n";
+		foreach $i (0..($param{POP}-1)){
+			$mol[$i]="";
+			$molping[$i]="";
+			if ($param{LONGGEN} != 0){
+				$longgen=$param{LONGGEN};
+			}
+			else{
+				$longgen=int(rand(4))+1;	
+			};	
+			if($param{SCAFFOLD} ne '0'){
+				@getpoint=split(' ',$scaffoldpoints);
+				$nbpoints=@getpoint;
+				$nb2=int(rand($nbpoints));
+				$molping[$i]="0";
+				$mol[$i]="1*".$getpoint[$nb2];
+			}
+			else{	
+				$tmpmol=&getlego("any");
+				$tmpmol=~s/(.*)\*(.*)/$1/;
+				$molping[$i]=$tmpmol;
+				$mol[$i]="1*".$2;
+			};
+
+				#print "$i $mol[$i]/$molping[$i]\n";
+				foreach $j (2..$longgen){
+					
+					#which from $mol will be connected
+					if($j==2){
+						$tmpa=$mol[$i];	
+					}
+					else{
+						$tmpa=&getfreeanchor($mol[$i],$molping[$i]);
+					};	
+					#print "$tmpa\n";	
+					#with which new fgt
+					$tmpmol=&getlego("any");
+					$tmpmol=~s/(.*)\*(.*)/$1/;
+					$tmpb=$j."*".$2;
+					#print "$tmpb\n";
+					
+					#association with b !
+					if($j==2){
+						$mol[$i]=$mol[$i]."-".$tmpb;
+						$molping[$i]=$molping[$i]." $tmpmol";
+						#print "$i $mol[$i]/$molping[$i]\n";
+					}
+					elsif($tmpa ne ""){
+						$mol[$i]=$mol[$i]."_".$tmpa."-".$tmpb;
+						$molping[$i]=$molping[$i]." $tmpmol";	
+						#print "$i $mol[$i]/$molping[$i]\n";
+					}
+					else{
+						#print "warning: cannot add another fragment to $mol[$i]/$molping[$i] (all substituent fragments)\n";
+					};	
+				
+				};
+				print "$i $mol[$i]/$molping[$i]\n";
+			#};
+		};	
+	}
+        elsif($param{START} ne '0' && $optionlea eq ""){
+
+                print"\n";
+                print "Initialisation of the population with the starting pool: $param{START}\n";
+		
+		# open existing file with the right format and importantly must be constitued by the current uploaded lego libraries
+		$gi=0;
+		@startpool="";
+		@startpooling="";
+		open(INS,"<$param{START}");
+		while(<INS>){
+			$_=~s/\n$//;
+			@get=split('\/',$_);
+			$get[0]=~s/ //g;
+			$startpool[$gi]=$get[0];
+			$startpooling[$gi]=$get[1];
+			#print "$startpool[$gi]\n";
+			#print "$startpooling[$gi]\n";
+			$gi++;
+		};
+		close(INS);
+
+		if($gi == $param{POP}){
+			foreach $i (0..($param{POP}-1)){
+				$mol[$i]="";
+                        	$molping[$i]="";
+				$mol[$i]=$startpool[$i];
+				$molping[$i]=$startpooling[$i];
+				$gi2=$i+1;
+				print "$i $mol[$i]/$molping[$i] (START POOL no $gi2)\n";
+			};
+		}
+		elsif($gi > $param{POP}){
+			foreach $i (0..($param{POP}-1)){
+				$mol[$i]="";
+				$molping[$i]="";
+				#$hasard from 0 to $gi-1	
+				$hasard=int(rand($gi));
+				$mol[$i]=$startpool[$hasard];
+				$molping[$i]=$startpooling[$hasard];
+				$gi2=$hasard+1;
+				print "$i $mol[$i]/$molping[$i] (START POOL no $gi2)\n";
+			};	
+		}
+		else{
+                        foreach $i (0..($gi-1)){
+                                $mol[$i]="";
+                                $molping[$i]="";
+                                $mol[$i]=$startpool[$i];
+                                $molping[$i]=$startpooling[$i];
+				$gi2=$i+1;
+				print "$i $mol[$i]/$molping[$i] (START POOL no $gi2)\n";
+                        };
+			foreach $i ($gi..($param{POP}-1)){
+				$mol[$i]="";
+				$molping[$i]="";
+				$hasard=int(rand($gi));
+				$mol[$i]=$startpool[$hasard];
+				$molping[$i]=$startpooling[$hasard];
+				$gi2=$hasard+1;
+				print "$i $mol[$i]/$molping[$i] (START POOL no $gi2)\n";
+			};
+		};
+	};
+	
+
+     	if($param{GET_POOL} ne '0' && $optionlea eq "-r"){
+
+		print "\n";
+		print "Click the SCAFFOLD(s) with $param{GET_POOL} reactants\n";
+		$ipop=0;
+		foreach $j (1..$nbscaffold){
+			foreach $i (0..($param{POP}-1)){
+				if($j==1){
+					$is=0;
+				}
+				else{
+					$is=@lego-$nbscaffold+$j-1;
+				};	
+				$mol[$ipop]="";
+				$molping[$ipop]="";
+
+				# only one point in SCAFFOLD
+				@getpoint=split(' ',$points[$is]);
+			
+				$i2=$i+1;
+				$molping[$ipop]="$is $i2";
+			
+				@getpoint2=split(' ',$points[$i2]);
+				$mol[$ipop]="1*".$getpoint[0]."-2*".$getpoint2[0];
+
+				print "$ipop $mol[$ipop]/$molping[$ipop]\n";
+				$ipop++;
+			};	
+		};
+
+		if($nbscaffold> 1){
+			#old based on GET_POOL: $param{POP}=$nbconformer;
+			$param{POP}=$param{POP}*$nbscaffold;
+		};
+		$longmol=@mol;
+		#print "debug: $param{POP} must == $longmol\n";
+	};
+
+
+        $nbmolidem=0;
+      	@memomol='';
+	$memi=0;
+	foreach $j (0..$param{POP}-1){
+		$memomol[$memi]=$mol[$j];
+		$memi++;
+	};
+    	
+
+#*************************************************************************
+#		     INSTRUCTIONS DU PROGRAMME PRINCIPAL
+#*************************************************************************
+
+	$generation=0;
+
+	#windows
+	#system("touch summary.out");
+	if(!-e "summary.out"){
+		open(IN,">summary.out");
+		close(IN);
+	};
+
+	if($optionlea eq "-r" && $sumw==0){# launch click reactants but no score
+		
+		&visuinit;
+
+		# global memory
+		$memoi=0;
+		@memo_gen="";
+		@memo_gi="";
+		@memo_mol="";
+		@memo_molping="";
+		@memo_nbconf="";
+		@memo_conf=""; # number of the best conformer
+		@memo_sdf=""; # sdf coordinates of best conformer
+		@memo_mol2=""; # mol2 coordinates of best conformer
+		@memo_score=""; # of best conformer
+		@memo_datablock="";
+		@memo_properties="";
+		@memo_rank=""; # ranking over the generation $memo_gen[$memoi]
+		@memo_remark="";
+
+		@scorepop=""; # score of each individual from 0 to ($param{POP}-1)
+
+		$pointeurmemoi=$memoi;
+
+		foreach $gi (0..$param{POP}-1){
+			print "\nmol$gi: $mol[$gi] / $molping[$gi]\n";
+			$gi2=$gi+1;
+
+			# global memory
+			$memo_gi[$memoi]=$gi;
+			$memo_gen[$memoi]=$generation;
+			$memo_mol[$memoi]=$mol[$gi];
+			$memo_molping[$memoi]=$molping[$gi];
+			
+			@tmpreactant=split(' ',$molping[$gi]);
+			$memo_datablock[$memoi]=$legodatablock[$tmpreactant[1]]; # retrieve datablock from @lego
+			
+			$memo_rank[$memoi]=$gi2;
+
+			unlink "mol.sdf" if(-e "mol.sdf");
+			$moleculei=$gi;
+			$nomtab="parent";
+			&build;
+			&optimis("mol.sdf") if($param{OPTIMIS} == 1 && -e "mol.sdf" && !-z "mol.sdf");
+			# if OPTIMIS 0:
+			&filter("mol.sdf") if($param{OPTIMIS} ==0 && -e "mol.sdf" && !-z "mol.sdf");
+
+			if(-e "mol.sdf" && !-z "mol.sdf"){
+				# global memory
+				$memo_conf[$memoi]=1;
+				#chop($nbconformer = `$leaexe/NBSDF.pl mol.sdf` );
+				$nbconformer=&nbsdf("mol.sdf");
+				$nbconformer=~s/ //g;
+				$memo_nbconf[$memoi]=$nbconformer;	 
+				#chop($memo_sdf[$memoi]= `$leaexe/searchsdfbyno.pl mol.sdf 1` );
+				$memo_sdf[$memoi]=&searchsdfi("mol.sdf", 1);
+				$memo_score[$memoi]=0;
+				$memo_properties[$memoi]="";
+			}
+			else{
+				$memo_remark[$memoi]=$memo_remark[$memoi]."build failed\n" if(!-e "mol.sdf");
+			};	 
+
+			$memoi++;
+			unlink "mol.sdf" if(-e "mol.sdf");
+		};	
+	
+		# Print results
+		print "\n";
+		print ('/'x80);
+		print "\n";
+		print "\n\t\t PRODUCTS\n\n";
+		print ('/'x80);
+		print "\n";
+
+		&memo_print($generation,1,$param{POP},"summary.out");#print all the solutions (from 1 to $param{POP})
+
+		&visumid($generation,1,$param{POP});# print solutions of $generation from ranking=1 to $param{POP}-1
+		&visuend("</TABLE>");
+
+
+	}
+	elsif($optionlea eq "" || ($optionlea eq "-r" && $sumw !=0)){ # launch de novo drug design by Genetic Algorithm or click chemistry
+	
+		if($optionlea eq "-r"){
+			$param{ELITISM}=$param{POP}; # to print all the molecules in visumid
+		};
+		&visuinit;
+		
+		# global memory
+		$memoi=0; 
+		@memo_gen="";
+		@memo_gi="";
+		@memo_mol="";
+       		@memo_molping="";
+		@memo_nbconf="";
+		@memo_conf=""; # number of the best conformer
+		@memo_sdf=""; # sdf coordinates of best conformer
+		@memo_mol2=""; # mol2 coordinates of best conformer
+		@memo_score=""; # of best conformer
+		@memo_datablock="";
+		@memo_properties="";
+		@memo_rank=""; # ranking over the generation $memo_gen[$memoi]
+		@memo_remark="";
+	
+                #STUDIES on operator efficiency
+                @op_which="";
+                @op_where="";
+                @op_scorep="";
+                @op_score="";
+		$privileged_lego="";
+
+		@scorepop=""; # score of each individual from 0 to ($param{POP}-1) 
+
+		$stopga=0;
+		while ($stopga==0 && $generation <= $param{GENMAX}){
+			
+			$pointeurmemoi=$memoi;
+			
+			foreach $gi (0..$param{POP}-1){
+
+				print "\nmol$gi: $mol[$gi] / $molping[$gi]\n";
+				$gi2=$gi+1;
+				
+				# global memory
+				$memo_gi[$memoi]=$gi;
+				$memo_gen[$memoi]=$generation;
+				$memo_mol[$memoi]=$mol[$gi];
+				$memo_molping[$memoi]=$molping[$gi];
+
+				if($optionlea eq "-r"){
+					 @tmpreactant=split(' ',$molping[$gi]);
+					 $memo_datablock[$memoi]=$legodatablock[$tmpreactant[1]]; # retrieve datablock from @lego
+				}
+				else{
+					$memo_datablock[$memoi]="";
+				};
+
+				#STUDIES on operator efficiency
+				$op_score[$gi]=0;
+
+				#if($generation==0){
+					$scorepop[$gi]=0;
+					unlink "mol.sdf" if(-e "mol.sdf");
+
+					# Build, Optimis and Score (parent -> @mol ; child -> @molchild)
+					#to erase remarks set in optims.pl when children optimized
+					$memo_remark[$memoi]="";
+					&bos("$gi","parent"); 
+					
+					if(-e "mol.sdf" && !-z "mol.sdf"){	
+						#dvt
+						print "mol$gi: best conformer is number $ranking[1] / $nbconformer with score=$score[$ranking[1]]\%\n";
+						$scorepop[$gi]=$score[$ranking[1]]; # @ranking begins at 1
+
+						# global memory
+						$memo_conf[$memoi]=$ranking[1];
+			       			$memo_nbconf[$memoi]=$nbconformer;
+						#chop($memo_sdf[$memoi]= `$leaexe/searchsdfbyno.pl mol.sdf $ranking[1]` );
+						$memo_sdf[$memoi]=&searchsdfi("mol.sdf", $ranking[1]);
+						$memo_score[$memoi]=$score[$ranking[1]];
+						$memo_properties[$memoi]=$properties[$ranking[1]];
+						
+						#dvt
+						#print "properties=\n$memo_properties[$memoi]\n";	
+					}
+					else{
+						$memo_remark[$memoi]=$memo_remark[$memoi]."build failed\n" if(!-e "mol.sdf");
+					};
+
+				#}#if($generation==0
+				#else{
+					# global memory
+					#$memo_conf[$memoi]=
+					#$memo_nbconf[$memoi]=
+					#$memo_sdf[$memoi]=
+					#$memo_score[$memoi]=
+					#$memo_properties[$memoi]=
+					#$memo_remark[$memoi]=
+
+					#STUDIES on operator efficiency
+					$op_score[$gi]=sprintf"%4.2f",($scorepop[$gi]-$op_scorep[$gi]);
+					if($generation > 0 && $op_score[$gi] > 0 && ($op_which[$gi] eq "add" || $op_which[$gi] eq "replace")){
+						@getcell=split(' ',$op_where[$gi]);
+						if($privileged_lego!~/ $getcell[0] /){
+							$privileged_lego=$privileged_lego." ".$getcell[0]." ";
+						};	
+					};	
+				
+				#};
+
+				$memoi++;
+				unlink "mol.sdf" if(-e "mol.sdf");
+			};
+	
+			@scoretmp="";
+	       		@scoretmp=@scorepop;
+			&decreasing_order; # use @scoretmp in SCORE.pl, here @ranking begins at 0
+
+			&autoadapt if($optionlea eq "");# change operators probabilities
+
+			&scale; # use @scorepop and return @poids
+	       	
+			# Print results
+	        	print "\nPopulation (generation $generation): decreasing order of scores and weight:\n";
+	        	open(EFF,">>operators.out");
+			foreach $j (0..$param{POP}-1){
+
+				# global memory
+				$memo_rank[$pointeurmemoi+$ranking[$j]]=$j+1; 
+				
+				$j2=$ranking[$j]+1;
+				print "$j mol[$ranking[$j]] sdf_file_no=$j2 compos=$mol[$ranking[$j]] / $molping[$ranking[$j]] score=$scorepop[$ranking[$j]] weight=$poids[$ranking[$j]]\n";
+			
+				#STUDIES on operator efficiency
+				#print EFF "$generation $j $op_which[$j] $op_score[$j] $op_where[$j]\n" if($generation > 0);
+				print EFF "$generation $ranking[$j] $op_which[$ranking[$j]] $op_score[$ranking[$j]] $op_where[$ranking[$j]]\n" if($generation > 0);
+
+			};
+			close(EFF);
+
+			if($scorepop[$ranking[0]] == 100 && $generation < $param{GENMAX}){
+				$stopga=1; #stops genetic algorithm: convergence
+				print "LEA STOPS: convergence reached\n";
+			}
+			elsif($generation < $param{GENMAX}){
+		
+				if($param{ELITISM} >= 1){
+					&visumid($generation,1,$param{ELITISM});
+				}
+				else{
+					&visumid($generation,1,1); #print the best one 
+					#&visumid($generation,1,$param{POP});# all
+				};
+				
+				print "\nChildren:\n";
+				@molchild="";
+				@molpingchild="";
+				@scorepopchild="";
+
+				#STUDIES on operator efficiency
+				@op_which="";
+				@op_where="";
+				@op_scorep=""; #score of parent (the best one in case of 2 parents)
+				@op_score=""; #difference of scores: child minus parent
+
+				# elitism
+				if($param{ELITISM} > 0){
+				 	foreach $gi (0..$param{ELITISM}-1){
+
+						#choose elites that are different from each other
+						$vu=0;
+						foreach $eliti (0..$gi-1){
+							
+							@elitemolpinga=split(' ',$molping[$ranking[$gi]]);
+							@elitemolpingasort=sort @elitemolpinga;
+							$elitemolpingasortchain=join(' ',@elitemolpingasort);
+
+							@elitemolpingb=split(' ',$molpingchild[$eliti]);
+							@elitemolpingbsort=sort @elitemolpingb;
+							$elitemolpingbsortchain=join(' ',@elitemolpingbsort);
+
+							if($elitemolpingasortchain eq $elitemolpingbsortchain && $scorepop[$ranking[$gi]] == $scorepopchild[$eliti]){
+								$vu=1;
+							};
+						};
+
+						if($vu==0){
+					       		$molchild[$gi]=$mol[$ranking[$gi]];
+					       		$molpingchild[$gi]=$molping[$ranking[$gi]];
+							$scorepopchild[$gi]=$scorepop[$ranking[$gi]];
+					       		print "molchild[$gi] Elite no $gi: $molchild[$gi] / $molpingchild[$gi] score=$scorepop[$ranking[$gi]]\n";
+						
+							$op_which[$gi]="elite";
+							$op_where[$gi]="elite";
+							$op_scorep[$gi]=$scorepop[$ranking[$gi]];
+						};	
+				       	};
+			        };  
+				       			  
+				#used in CHILD.pl: identify good characteritics by fingercg on best solution
+				$sdfelite="g".$generation."_mol".($ranking[0]+1).".sdf";
+				$sdfelite="VISU/".$sdfelite;
+				#However if $evaluate_finger=1 in function exists then use it
+				$sdfelite=$fingerref if($evaluate_finger);
+
+				# create children
+				&child;
+				
+				# select new population of molecules
+				@mol="";
+				@molping="";	
+				@scorepop="";
+				print "\n";
+				foreach $gi (0..$param{POP}-1){
+					$mol[$gi]=$molchild[$gi];
+					$molping[$gi]=$molpingchild[$gi];
+					$scorepop[$gi]=0;
+					$scorepop[$gi]=$scorepopchild[$gi] if($scorepopchild[$gi] ne "");
+					print "new $gi $mol[$gi] / $molping[$gi] score=$scorepop[$gi]\n";
+				};	
+			};
+			$generation++;
+		};	
+		
+		$generation=$generation-1; # generation number at which GA stops
+
+		# Print solutions
+		
+	       	print "\n";
+	        print ('/'x80);
+		print "\n";
+		print "\n\t\t LAST POPULATION (generation $generation)\n\n";
+		print ('/'x80);
+		print "\n";
+		
+		open(ARY,">>summary.out");
+	        	printf ARY "\n\t\tLAST POPULATION (generation $generation):\n\n";	
+		close(ARY);
+
+		&memo_print($generation,1,$param{POP},"summary.out");#print all the solutions (from 1 to $param{POP}) 
+		
+		if($param{ELITISM} >= 1){
+			&visumid($generation,1,$param{ELITISM});
+		}
+		else{
+			&visumid($generation,1,1);# print solutions of $generation from ranking 1 to 1 : best solution of the generation	
+		};
+		&visuend("</TABLE>");
+	
+		@getcell=split(' ',$privileged_lego);
+		$nbprivileged=@getcell;
+		@getcellsort=sort { $a <=> $b } @getcell;
+		$privileged_lego=join(' ',@getcellsort);
+		print "\nPrivileged legos which improve child score ($nbprivileged):\n$privileged_lego\n\n";
+
+
+	}
+	else{ #option -e 
+
+		&visuinit;
+
+		@scorepop="";	
+		foreach $gi (0..@memo_gi-1){
+			
+			$gi2=$gi+1;
+			print "\n$evalfile($gi2):\n";
+			
+			$scorepop[$gi]=0;
+			
+			open(PARAM,">mol.sdf");
+			print PARAM "$memo_sdf[$gi]";
+			close(PARAM);
+
+			&optimis("mol.sdf") if($param{OPTIMIS} == 1 && -e "mol.sdf" && !-z "mol.sdf");
+			# if OPTIMIS 0:
+			&filter("mol.sdf") if($param{OPTIMIS} ==0 && -e "mol.sdf" && !-z "mol.sdf");
+
+			if(-e "mol.sdf" && !-z "mol.sdf"){
+				#chop($nbconformer = `$leaexe/NBSDF.pl mol.sdf`);
+				$nbconformer=&nbsdf("mol.sdf");
+				$nbconformer=~s/ //g;
+
+				# mol2 not necessary
+				#print "Convert $file($nbconformer conformers) into .mol2 by SDF_MOL2.pl\n" if($param{VERBOSITY} >= 1);
+				#chop($rep3=`$leaexe/SDF_MOL2.pl mol.sdf`);
+				#print "$rep3\n" if($param{VERBOSITY} >= 1);
+
+				# score (expressed in %) of conformers into @score, ranking in @ranking (in decreasing order)
+				&score("mol.sdf",$nbconformer);
+				print "Molecule $gi2: best conformer is number $ranking[1] / $nbconformer with score=$score[$ranking[1]]\%\n";
+				$scorepop[$gi]=$score[$ranking[1]];
+				
+				# global memory
+				$memo_conf[$gi]=$ranking[1];
+			      	$memo_nbconf[$gi]=$nbconformer;
+				#chop($memo_sdf[$gi]= `$leaexe/searchsdfbyno.pl mol.sdf $ranking[1]` );
+				$memo_sdf[$gi]=&searchsdfi("mol.sdf", $ranking[1]);
+
+				# mol2 not necessary	
+				#chop($memo_mol2[$gi]=`cat mol_$ranking[1].mol2`);
+
+				$memo_score[$gi]=$score[$ranking[1]];
+				$memo_properties[$gi]=$properties[$ranking[1]];
+			};	
+			#system("rm -f  mol_*.mol2");
+			unlink "mol.sdf" if(-e "mol.sdf");
+		};
+
+		@scoretmp="";
+		@scoretmp=@scorepop;
+		&decreasing_order;
+		print "\nFile $evalfile: decreasing order of scores:\n";
+		foreach $gi (0..@memo_gi-1){
+			# global memory
+			$memo_rank[$ranking[$gi]]=$gi+1;
+			$gi2=$ranking[$gi]+1;
+			print "$memo_rank[$ranking[$gi]] $evalfile($gi2) score=$scorepop[$ranking[$gi]]\n";
+		};
+
+		# Print solutions
+		print "\n";
+	        print ('/'x80);
+	        print "\n";
+	        print "\n\t\t LAST POPULATION (generation $generation)\n\n";
+		print ('/'x80);
+		print "\n";
+						
+		open(ARY,">>summary.out");
+			printf ARY "\n\t\tLAST POPULATION (generation $generation):\n\n";
+		close(ARY);
+		
+		&memo_print($generation,1,$nbevalfile,"summary.out"); # print all the solution from 1 to $nbevalfile
+		                 	
+		&visumid($generation,1,$nbevalfile);# print solutions of $generation from ranking=1 to $nbevalfile
+		&visuend("</TABLE>");
+		
+	};
+
+	if($param{SCORE100} > 0){
+		print "WARNING: SCORE100 is set: only solutions with score >= $param{SCORE100} % are kept in ./VISU !\n\n";
+		open(ARY,">>summary.out");
+			printf ARY "WARNING: SCORE100 is set: only solutions with score >= $param{SCORE100} % are kept in ./VISU !\n\n";
+		close(ARY);	
+	};
+	
+	$memi=@memo_gi;
+
+	open(ARY,">>summary.out");
+		print ARY "\nNumber of evaluated molecules = $memi\n\n";
+		print ARY "\n";
+	close(ARY);
+	
+	#system("grep \'>\' summary.out | awk \'{print \$5, \$7}\' > docking.out");
+	
+	print "\nNumber of evaluated molecules = $memi\n\n";
+	print "Visualization at ./VISU/visu.html (see also ./VISU/list.sdf, ./VISU/list.lst, fitmoy.dat (Genetic algorithm convergence) and summary.out)\n";
+
+
+	#Case of Genetic Algorithm: Statistics on the population
+	#Number of different molecules and sammon map to evaluate diversity
+	#write edesign.sdf
+	if($optionlea eq ""){
+		&diversity;
+	};
+
+
+#*************************************************************************
+#			SUBROUTINES
+#*************************************************************************
+
+sub nbsdf{
+        local($fsdf)=@_;
+
+        $nbligne=0;
+        $nbd=0;
+        open(IN,"<$fsdf");
+        while(<IN>){
+                $nbd++ if($_=~/\$\$\$\$/);
+                $nbligne++;
+        };
+        close(IN);
+        if($nbligne >=5 && $nbd==0){#case of .mol
+                $nbd=1;
+        };
+        #print "$nbd\n";
+        $nbd;
+
+};
+
+#*************************************************************************
+#*************************************************************************
+
+sub searchsdfi{
+        local($fsdf,$motifs)=@_;
+
+        $flag=1;
+        $flagname=0;
+        $flagnew=1;
+        $fit=0;
+        @ligne='';
+        $i=0;
+        open(IN,"<$fsdf");
+	#open(OUT,">$fsdfo");
+        while (<IN>){
+                $conv2=$_;
+                if ($flagnew){
+                        $fit++;
+                        $flagnew=0;
+                        $flagname=0;
+                        @ligne='';
+                        $i=0;
+                };
+                $ligne[$i]=$_;
+                $i++;
+                if ($fit == $motifs){
+                        $flagname=1;
+                };
+                if ($conv2 =~/(\$\$\$\$)/){
+                        $flagnew=1;
+                        if ($flagname){
+				$printl="";
+                                foreach $i (0..@ligne-1){
+					#print OUT $ligne[$i];
+					$printl=$printl.$ligne[$i];
+                                };
+                                $flagname=0;
+                                last;
+                        };
+                };
+        };
+        close(IN);
+	#close(OUT);
+	$printl;
+};
+
+#*************************************************************************
+#*************************************************************************
+
+sub searchsdfif{
+        local($fsdf,$motifs,$fsdfo)=@_;
+
+        $flag=1;
+        $flagname=0;
+        $flagnew=1;
+        $fit=0;
+        @ligne='';
+        $i=0;
+        open(IN,"<$fsdf");
+        open(OUT,">$fsdfo");
+        while (<IN>){
+                $conv2=$_;
+                if ($flagnew){
+                        $fit++;
+                        $flagnew=0;
+                        $flagname=0;
+                        @ligne='';
+                        $i=0;
+                };
+                $ligne[$i]=$_;
+                $i++;
+                if ($fit == $motifs){
+                        $flagname=1;
+                };
+                if ($conv2 =~/(\$\$\$\$)/){
+                        $flagnew=1;
+                        if ($flagname){
+                                $printl="";
+                                foreach $i (0..@ligne-1){
+                                        print OUT $ligne[$i];
+					#$printl=$printl.$ligne[$i];
+                                };
+                                $flagname=0;
+                                last;
+                        };
+                };
+        };
+        close(IN);
+        close(OUT);
+	#$printl;
+};
+
+#*************************************************************************
+#*************************************************************************
+
+sub stripsdf{
+	local($fsdf,$motifs,$fsdfo)=@_;
+
+ 	$motifs=" ".$motifs." ";
+	#print "$motifs\n";
+	$ok=1;
+	#$nb=0;
+	open(OUT,">$fsdfo");
+	open(IN,"<$fsdf");
+	while(<IN>){
+        	if($_=~/^>/){
+                	$tmp=$_;
+          	        $tmp=~s/<//g;
+                	$tmp=~s/>//g;
+                	@get=split(' ',$tmp);
+                	#print "$get[0]\n";
+                	if($motifs=~/ $get[0] /){
+                        	$ok=1;
+                	}
+                	else{
+                        	$ok=0;
+                	};
+        	};
+        	$ok=1 if($_=~/^\$\$\$\$/);
+        	print OUT $_ if($ok);
+		#$nb++ if($_=~/^\$\$\$\$/);
+	};
+	close(IN);
+	close(OUT);
+};
+
+#*************************************************************************
+#*************************************************************************
+
+sub replacex{
+	local($fsdf,$fsdfo)=@_;
+	
+	#$blanc=" ";
+	open(OUT,">$fsdfo");
+	open(IN,"<$fsdf");
+	while(<IN>){
+		@get = split(' ',$_);
+		if ($get[3] eq "X"){
+                	#$get[3]="H";
+			#$addh=sprintf"%10s%10s%10s%1s%1s%1s%3s%3s%3s\n",$get[0],$get[1],$get[2],$blanc,$get[3],$blanc,$get[4],$get[5],$get[6];
+			#print OUT "$addh";
+			$_=~s/ X / H /;
+		};
+                print OUT $_;
+	};
+	close(IN);
+	close(OUT);
+};
+
+#*************************************************************************
+#*************************************************************************
+
+sub getx{
+	local($fsdf,$fsdfo)=@_;
+
+	$ecrit=1;
+	$point="";
+	$point2="";
+	$pasvu=1;
+	$ia=1;
+	$ja=0;
+	$compt=0;
+	open(OUT,">$fsdfo");
+	open(IN,"<$fsdf");
+	while(<IN>){
+	        @getstr = split(' ',$_);
+        	$comp++;
+                if ($compt == 4){
+                        $istratom=$getstr[0];
+                        $istrbond=$getstr[1];
+
+                        @coller=split(' *',$istratom);
+                        if(@coller>3 && @coller==6){
+                                $istratom=$coller[0].$coller[1].$coller[2];
+                                $istrbond=$coller[3].$coller[4].$coller[5];
+                        }
+                        elsif(@coller>3 && @coller==5){
+                                if($_=~/^\s/){
+                                        $istratom=$coller[0].$coller[1];
+                                        $istrbond=$coller[2].$coller[3].$coller[4];
+                                }
+                                else{
+                                        $istratom=$coller[0].$coller[1].$coller[2];
+                                        $istrbond=$coller[3].$coller[4];
+                                };
+                        };
+                };
+		if(($comp > 4) && ($ia <= $istratom)){
+			$comp2=$comp-4;
+			$point=$point."-".$comp2 if ($getstr[3] eq "X");
+			$ia++;
+		};
+		if (($comp > 4) && ($ia > $istratom) && ($ja <= $istrbond)){
+			if ($ja == 0){
+                        	$ja++;
+                        	$point=$point."-";
+                	}
+                	else{
+                        	@coller=split(' *',$getstr[0]);
+                                @coller2=split(' *',$getstr[1]);
+                                if(@coller==6 && $getstr[1] ne ""){
+                                        $getstr[0]=$coller[0].$coller[1].$coller[2];
+                                        $getstr[2]=$getstr[1];
+                                        $getstr[1]=$coller[3].$coller[4].$coller[5];
+                                }
+                                elsif(@coller==6 && $getstr[1] eq ""){
+                                        $getstr[0]=$coller[0].$coller[1];
+                                        $getstr[1]=$coller[2].$coller[3].$coller[4];
+                                        $getstr[2]=$coller[5];
+                                }
+                                elsif(@coller==5){
+                                        if($_=~/^\s/){
+                                                $getstr[0]=$coller[0].$coller[1];
+                                                $getstr[2]=$getstr[1];
+                                                $getstr[1]=$coller[2].$coller[3].$coller[4];
+                                        }
+                                        else{
+                                                $getstr[0]=$coller[0].$coller[1].$coller[2];
+                                                $getstr[2]=$getstr[1];
+                                                $getstr[1]=$coller[3].$coller[4];
+                                        };
+                                }
+                                elsif(@coller==4){
+                                        if($_=~/^\s/){
+                                                $getstr[0]=$coller[0];
+                                                $getstr[2]=$getstr[1];
+                                                $getstr[1]=$coller[1].$coller[2].$coller[3];
+                                        }
+                                        else{
+                                                $getstr[0]=$coller[0].$coller[1].$coller[2];
+                                                $getstr[2]=$getstr[1];
+                                                $getstr[1]=$coller[3];
+                                        };
+                                }
+                                elsif(@coller2==4){
+                                        $getstr[1]=$coller2[0].$coller2[1].$coller2[2];
+                                        $getstr[2]=$coller2[3];
+                                }
+                                elsif(@coller==7){
+                                        $getstr[0]=$coller[0].$coller[1].$coller[2];
+                                        $getstr[1]=$coller[3].$coller[4].$coller[5];
+                                        $getstr[2]=$coller[6];
+                                };
+
+				if($point=~/\-$getstr[0]\-/){
+                                #print "point $point\n";
+                                        $point2=$point2."-".$getstr[1];
+                                }
+                                elsif($point=~/-$getstr[1]-/){
+                                        $point2=$point2."-".$getstr[0];
+                                };
+
+				$ja++;
+			};
+		};
+		if($_=~/<POINTS>/){
+			if($point2 ne ''){
+        	                $point2=~s/^-//;
+                	        $point2=~s/-$//;
+                        	print OUT "> <POINTS>\n";
+                        	print OUT "$point2\n";
+                        	print OUT "\n";
+                	};
+                	$ecrit=0;
+                	$pasvu=0;
+        	}
+        	elsif($_=~/^\$\$\$\$/){
+                	if($pasvu){
+                        	if($point2 ne ''){
+                                	$point2=~s/^-//;
+                                	$point2=~s/-$//;
+                                	print OUT "> <POINTS>\n";
+                                	print OUT "$point2\n";
+                                	print OUT "\n";
+                        	};
+                	};
+                	$point="";
+                	$point2="";
+                	$pasvu=1;
+                	$comp=0;
+                	$i=1;
+                	$j=0;
+                	print OUT $_;
+        	}
+        	elsif($ecrit){
+                	print OUT $_;
+        	};
+        	$ecrit=1 if($getstr[0] eq '');
+	};
+	close(IN);
+	close(OUT);
+};
+
+#*************************************************************************
+#*************************************************************************
+
+sub diversity{
+
+	# print all molecules:
+	open(OIJ,">edesign.sdf");
+	foreach $j (0..@memo_gi-1){
+		if($memo_sdf[$j] ne ""){
+			$tmpscore="> <SCORE>\n$memo_score[$j]\n\n";
+			$tmpsdf=$memo_sdf[$j];
+			$tmpsdf=~s/\$\$\$\$/$tmpscore/;
+			$tmpsdf=$tmpsdf."\$\$\$\$\n";
+			print OIJ "$tmpsdf";
+		};	
+	};	
+	close(OIJ);
+	print "\nSee edesign.sdf to retreive all correctly converted molecules\n";
+	print "popopop.txt contains the lastest population - can be read as starting pool when using the START option in ligand.in\n";
+
+################# COMMENT  ##########################
+
+	# remove duplicates
+	#chop($tmplog=`$leaexe/CLASS_FGT.pl edesign.sdf key_edesign - unique_edesign.sdf 0`);
+	#chop($tmpnb = `$leaexe/NBSDF.pl unique_edesign.sdf` );
+	#print "\nNumber of unique molecules = $tmpnb\n";
+
+	# calculate sammon
+	#chop($tmplog=`$leaexe/properties.pl unique_edesign.sdf 0`);
+	#chop($tmplog=`$leaexe/extract_list_sdf.pl SCORE`);
+	#print "\n list_SCORE.lst contains scores of unique_edesign.sdf molecules\n";
+
+	#chop($tmplog=`$leaexe/DIVERSITY/sammon.pl properties.out`);
+	#chop($tmplog=`$leaexe/DIVERSITY/fly.pl sammon.out 2 3 0 0 diversity diversity`);
+
+	#print "\nSee fly.gif for the diversity map\n";
+	
+##########################################################
+};
+
+
+#*************************************************************************
+#*************************************************************************
+
+
+
+sub visuinit{
+	
+#local($title)=@_;
+
+	if($optionlea eq ""){
+#$title="<CENTER>eDesign: genetic algorithm over $param{GENMAX} generations</CENTER><P>\n<a href=\"./list.sdf\">Download the best molecule(s) of each generation (concatenated SDF file)</a><P>\n<a href=\"./list.lst\">list.lst</a><P>\n<TABLE class=\"tx1b\" bordercolor=\"#5C6785\" border=1 cellspacing=\"1\" cellpadding=\"3\" ><TR bgcolor=\"#C0C0C0\" align=\"center\"><TD>Generation number</TD><TD>Rank by decreasing order</TD><TD>File name in VISU</TD><TD>Score (%)</TD><TD>Molecular Properties</TD><TD>Molecular Composition</TD><TD>Remarks</TD><TR><P>";
+
+$title="<CENTER>eDesign: genetic algorithm over $param{GENMAX} generations</CENTER><P>\n<TABLE class=\"tx1b\" bordercolor=\"#5C6785\" border=1 cellspacing=\"1\" cellpadding=\"3\" ><TR bgcolor=\"#C0C0C0\" align=\"center\"><TD>Generation number</TD><TD>Rank by decreasing order</TD><TD>File name in VISU</TD><TD>Score (%)</TD><TD>Molecular Properties</TD><TD>Molecular Composition</TD><TD>Remarks</TD><TR><P>";
+		
+	}
+	elsif($optionlea eq "-e"){
+#$title="<CENTER>eDesign: evaluation of $evalfile</CENTER><P>\n<a href=\"./list.sdf\">Download hits having score > 0% (concatenated SDF file)</a><P>\n<a href=\"./list.lst\">list.lst</a><P>\n<TABLE class=\"tx1b\" border=1 cellspacing=\"1\" cellpadding=\"3\" bordercolor=\"#5C6785\"><TR bgcolor=\"#C0C0C0\" align=\"center\"><TD>Rank</TD><TD>File name in VISU</TD><TD>Score (%)</TD><TD>Molecular Properties</TD><TD>Molecular Data (if any)</TD><TD>Remarks</TD><TR><P>";
+
+$title="<CENTER>eDesign: evaluation of $evalfile</CENTER><P>\n<TABLE class=\"tx1b\" border=1 cellspacing=\"1\" cellpadding=\"3\" bordercolor=\"#5C6785\"><TR bgcolor=\"#C0C0C0\" align=\"center\"><TD>Rank</TD><TD>File name in VISU</TD><TD>Score (%)</TD><TD>Molecular Properties</TD><TD>Molecular Data (if any)</TD><TD>Remarks</TD><TR><P>";
+	
+	}
+	elsif($optionlea eq "-r"){	
+#$title="<CENTER>eDesign: libray design</CENTER><P>\n<a href=\"./list.sdf\">Download the library (concatenated SDF file)</a><P>\n<a href=\"./list.lst\">list.lst</a><P>\n<TABLE class=\"tx1b\" border=1 bordercolor=\"#5C6785\" cellspacing=\"1\" cellpadding=\"3\" ><TR bgcolor=\"#C0C0C0\" align=\"center\"><TD>Rank</TD><TD>File name in VISU</TD><TD>Score (%)</TD><TD>Molecular properties</TD><TD>Molecular Composition<P>0 is $param{SCAFFOLD}<P>followed by the reagent number in $param{GET_POOL}</TD><TD>Molecular Data<P>(if exists)</TD><TD>Remarks</TD><TR><P>";
+
+$title="<CENTER>eDesign: libray design</CENTER><P>\n<TABLE class=\"tx1b\" border=1 bordercolor=\"#5C6785\" cellspacing=\"1\" cellpadding=\"3\" ><TR bgcolor=\"#C0C0C0\" align=\"center\"><TD>Rank</TD><TD>File name in VISU</TD><TD>Score (%)</TD><TD>Molecular properties</TD><TD>Molecular Composition<P>0 is $param{SCAFFOLD}<P>followed by the reagent number in $param{GET_POOL}</TD><TD>Molecular Data<P>(if exists)</TD><TD>Remarks</TD><TR><P>";
+
+		
+	};
+
+	if($platform eq "linux" || $platform eq "darwin"){
+		system("rm -rf $param{WORKDIR}/VISU") if(-e "$param{WORKDIR}/VISU");
+		system("mkdir $param{WORKDIR}/VISU") if(!-e "$param{WORKDIR}/VISU");
+	}
+	else{
+		print "$platform: program will overwrite the folder VISU \n";
+		unlink "$param{WORKDIR}/VISU/list.lst" if(-e "$param{WORKDIR}/VISU/list.lst");
+		unlink "$param{WORKDIR}/VISU/list.sdf" if(-e "$param{WORKDIR}/VISU/list.sdf");
+		unlink "$param{WORKDIR}/VISU/visu.html" if(-e "$param{WORKDIR}/VISU/visu.html");
+	};
+
+	#strict minimum
+	#system("cp $leaexe/JMOL/visu.html $param{WORKDIR}/VISU/.");
+	#system("cp $leaexe/JMOL/visul.html $param{WORKDIR}/VISU/.");
+	#system("cp $leaexe/JMOL/JmolApplet.jar $param{WORKDIR}/VISU/.");	
+	#system("cp $leaexe/JMOL/Jmol.js $param{WORKDIR}/VISU/.");
+	#system("cp $leaexe/JMOL/Jmol.jar $param{WORKDIR}/VISU/.");
+	
+	#copy full version
+	if($platform eq "linux" || $platform eq "darwin"){
+		system("cp -r $leaexe/JMOL/* $param{WORKDIR}/VISU/.");
+		#system("cp -r $leaexe/JMOL/jsmol $param{WORKDIR}/VISU/.");
+	}
+	else{
+		print "$platform: program will overwrite the folder VISU \n";
+		#system("copy $leaexe/JMOL/* $param{WORKDIR}/VISU/.");
+	};
+
+	$fg1=1;
+	open(VISU,"<$leaexe/JMOL/visu.html");
+	open(VISA,">$param{WORKDIR}/VISU/visu.html");
+	while(<VISU>){
+		$fg1=0 if($_=~/load caffeine.mol/);	
+		print VISA $_ if($fg1);	
+	};
+	print VISA "<B>$title<P></B>\n";
+	close(VISU);
+	close(VISA);
+
+	#windows
+	#system("touch VISU/list.sdf");
+	if(!-e "VISU/list.sdf"){
+		open(IN,">VISU/list.sdf");
+		close(IN);
+	};
+	#system("touch VISU/list.lst");
+	if(!-e "VISU/list.lst"){
+		open(IN,">VISU/list.lst");
+		close(IN);
+	};
+	
+};
+
+
+#*************************************************************************
+#*************************************************************************
+
+sub visumid {
+	local($visugen,$visui,$visuj)=@_;
+
+	open(VISA,">>$param{WORKDIR}/VISU/visu.html");
+	open(OUT,">>VISU/list.sdf");
+	open(OKT,">>VISU/list.lst");
+	
+	foreach $j ($visui..$visuj){
+		foreach $k (0..@memo_gi-1){
+		 	if($memo_gen[$k]==$visugen && $memo_rank[$k]==$j){
+			if(($param{SCORE100} > 0 && $memo_score[$k] >= $param{SCORE100} ) || $param{SCORE100} == 0){
+				
+				$tmpsdf=$memo_sdf[$k];
+				$tmpsdf=~s/\$\$\$\$/$memo_datablock[$k]/;
+				$tmpsdf=$tmpsdf."\$\$\$\$\n";
+			
+				print OUT "$tmpsdf";
+				
+				$file="g".$visugen."_mol".($memo_gi[$k]+1).".sdf";
+				open(OUY,">VISU/$file");
+					print OUY "$tmpsdf";
+				close(OUY);
+				print OKT "$file\n";
+
+				#if docked or aligned then concatenate new coordinates
+				#in results.sdf
+				if($evaluate_shape){
+					#system("touch $param{WORKDIR}/VISU/results.sdf") if(!-e "$param{WORKDIR}/VISU/results.sdf");
+					if(!-e "$param{WORKDIR}/VISU/results.sdf"){
+						open(IN,">$param{WORKDIR}/VISU/results.sdf");
+						close(IN);
+					};
+
+					$fileshape="g".$visugen."_mol".($memo_gi[$k]+1)."_moved.sdf";
+					if(-e "$param{WORKDIR}/VISU/$fileshape"){
+						chop($tmpsdfsol=`cat $param{WORKDIR}/VISU/results.sdf $param{WORKDIR}/VISU/$fileshape > $param{WORKDIR}/VISU/tmpresult.sdf`);
+						rename "$param{WORKDIR}/VISU/tmpresult.sdf", "$param{WORKDIR}/VISU/results.sdf";
+					};
+				};
+				
+				#if docking
+				if($evaluate_dock){
+					#system("touch $param{WORKDIR}/VISU/results.sdf") if(!-e "$param{WORKDIR}/VISU/results.sdf");
+					if(!-e "$param{WORKDIR}/VISU/results.sdf"){
+						open(IN,">$param{WORKDIR}/VISU/results.sdf");
+						close(IN);
+					};
+
+					$textjmol="<a href=\"javascript:Jmol.loadFile(jmolApplet0,\'./$file\')\">Click to display</a><P>(or <a href=\"./$file\">download the sdf file</a>)<p>";
+					
+					foreach $l (0..@prot-1){
+						$namecomplex="g".$memo_gen[$k]."_mol".($memo_gi[$k]+1)."_conf".$memo_conf[$k]."_prot$l";
+						#print "namecomplex=$namecomplex\n";
+						$filepdb=$namecomplex.".pdb";
+						$fullpdb=$namecomplex."full.pdb";
+						$filemol2=$namecomplex.".mol2";
+						$filemol2sdf=$namecomplex.".sdf";
+						$filepdb_docklog=$namecomplex."_docklog";
+						if(-e "$protdir[$l]/$filepdb"){
+							system("$leaexe/MOL2_SDF.pl $protdir[$l]/$filemol2");
+							if(-e "$filemol2sdf"){
+								chop($tmpsdfsol=`cat $param{WORKDIR}/VISU/results.sdf $filemol2sdf > $param{WORKDIR}/VISU/tmpresult.sdf`);
+								rename "$param{WORKDIR}/VISU/tmpresult.sdf", "$param{WORKDIR}/VISU/results.sdf";
+								system("mv $filemol2sdf $param{WORKDIR}/VISU/.");
+							};
+							system("cp $protdir[$l]/$filepdb $param{WORKDIR}/VISU/.");
+							system("cp $protdir[$l]/$fullpdb $param{WORKDIR}/VISU/.");
+							system("cp $protdir[$l]/$filemol2 $param{WORKDIR}/VISU/.");
+							system("cp $protdir[$l]/$filepdb_docklog $param{WORKDIR}/VISU/.");
+							$textjmol=$textjmol."<p>Complex with $prot[$l]:<P><a href=\"javascript:Jmol.loadFile(jmolApplet0,\'./$filepdb\')\">Click to display</a><P><a href=\"./$filepdb_docklog\">see the docking log file</a><p>(<a href=\"./$filepdb\">download site_and_ligand.pdb</a>)<p>(<a href=\"./$fullpdb\">download fullcomplex.pdb</a>)<p>(<a href=\"./$filemol2\">download docked_conformation.mol2</a>)";
+						}
+						else{
+							$textjmol=$textjmol."<p>$prot[$l]:<P>no complex files available<p>The docking procedure failed or was skipped!";
+						};	
+					};	
+				}
+				else{	
+					$textjmol="<a href=\"javascript:Jmol.loadFile(jmolApplet0,\'./$file\')\">Click to display</a> <P>(<a href=\"./$file\">download sdf</a>)<p>";
+				};
+				
+				$textdatablock=$memo_datablock[$k];
+				$textdatablock=~s/</\&lt;/g;
+				$textdatablock=~s/>/\&gt;/g;
+				$textdatablock=~s/\n/<P>/g;
+				$textdatablock="-" if($textdatablock eq "");
+
+				$textproperties=$memo_properties[$k];
+				$textproperties=~s/\n/<P>/g;
+				$textproperties=~s/^#//;
+				$textproperties=~s/mm/mw/;
+
+				if($optionlea eq ""){
+
+# table with: Generation number ; Rank ; file name in VISU ; SCORE (%) ;  properties ; Molecular composition ; conformers and remarks	
+
+print VISA "<TR valign=\"top\"><TD>$memo_gen[$k]</TD><TD>$memo_rank[$k]</TD><TD>$textjmol</TD><TD>$memo_score[$k]</TD><TD>$textproperties</TD><TD>$memo_mol[$k]<P>$memo_molping[$k]</TD><TD>$memo_nbconf[$k] conformers<P>Best is no $memo_conf[$k]<P>$memo_remark[$k]</TD></TR><P>\n";
+				}
+				elsif($optionlea eq "-e"){
+
+# table with: Rank ; File name in directory VISU ; SCORE (%) ; properties ; Molecular datablock ; conformers and remarks ;
+
+print VISA "<TR valign=\"top\"><TD>$memo_rank[$k]</TD><TD>$textjmol</TD><TD>$memo_score[$k]</TD><TD>$textproperties</TD><TD>$textdatablock</TD><TD>$memo_nbconf[$k] conformers<P>Best is no $memo_conf[$k]<P>$memo_remark[$k]</TD><TR><P>\n";
+
+				}
+				elsif($optionlea eq "-r"){
+
+# table with: Rank ; File name in directory VISU ; SCORE (%) ; properties ; Molecular composition ; Molecular datablock ; conformers and remarks ;
+
+print VISA "<TR valign=\"top\"><TD>$memo_rank[$k]</TD><TD>$textjmol</TD><TD>$memo_score[$k]</TD><TD>$textproperties</TD><TD>$memo_molping[$k]</TD><TD>$textdatablock</TD><TD>$memo_nbconf[$k] conformers<P>Best is no $memo_conf[$k]<P>$memo_remark[$k]</TD><TR><P>\n";
+				};
+			};	
+			};	
+		};
+	};
+	close(VISA);
+	close(OUT);
+	close(OKT);
+
+};
+
+#*************************************************************************
+#*************************************************************************
+
+sub visuend{
+	local($tablened)=@_;
+
+	$fg1=0;
+	open(VISU,"<$leaexe/JMOL/visu.html");
+	open(VISA,">>$param{WORKDIR}/VISU/visu.html");
+		print VISA "$tablened<P>\n";
+	while(<VISU>){
+		print VISA $_ if($fg1);
+		$fg1=1 if($_=~/load caffeine.mol/);
+	};
+	close(VISU);
+	close(VISA);
+
+	#remove refresh
+	open(VISA,"<$param{WORKDIR}/VISU/visu.html");
+	open(VISU,">$param{WORKDIR}/VISU/visur2.html");
+	while(<VISA>){
+		if($_=~/meta/ && $_=~/refresh/){
+			$rien=0;
+		}
+		elsif($_=~/Initiating .../){#remove loading picture){
+			$rien=0;
+		}
+		else{
+			print VISU $_;
+		};
+	};
+	close(VISA);
+	close(VISU);
+
+	rename "$param{WORKDIR}/VISU/visur2.html", "$param{WORKDIR}/VISU/visu.html";
+};
+
+#*************************************************************************
+#*************************************************************************
+
+
+sub getlego {
+   	local($whichlego)=@_;
+
+	$lelego_point="";
+	
+	#use frequencies if they exist
+	if($sumfreq > 0){
+		$freqi=int(rand($sumfreq))+1;
+		$lelego=1;
+		$sumfreqpart=$legofreq[$lelego];
+		while($freqi>$sumfreqpart){
+			$lelego++;
+			$sumfreqpart=$sumfreqpart+$legofreq[$lelego];
+		};
+	}
+	else{
+        	$lelego=int(rand($legoi))+1; #will never take 0 = scaffold
+	};
+
+	$forceend=0;
+	while($forceend < 10000 && $whichlego ne "any" && $whichlego > $typelego[$lelego]){
+		$lelego=int(rand($legoi))+1;
+		$forceend++;
+	};
+	if($forceend>=10000){
+		print "cannot generate $legoi fragments: 10 000 runs failed !\n"; 
+	}
+	else{
+		$randpoint=int(rand($typelego[$lelego]));
+		@getpoint=split(' ',$points[$lelego]);
+		$noanchor=$getpoint[$randpoint];
+		$lelego_point=$lelego."*".$noanchor;
+	};	
+	$lelego_point;
+};
+
+###################################################################################
+
+sub getfreeanchor {
+	local($whichmol,$whichmolping,$freeanchorlist)=@_;
+
+	$whichfgtbis=" ".$whichmol." ";
+	$whichfgtbis=~s/-/ /g;
+	$whichfgtbis=~s/_/ /g;
+#	print "whichfgtbis -$whichfgtbis- / $whichmolping\n";
+	
+	$nextanchor="";
+	$listnextanchor="";
+
+	@getfgt=split('_',$whichmol);
+	@getfgt4=split(' ',$whichmolping);
+	$nblegoinping=@getfgt4;
+	foreach $ani (0..@getfgt-1){
+		$oldlistnextanchor=$listnextanchor;
+		@getfgt2=split('-',$getfgt[$ani]);
+		foreach $anj (0..@getfgt2-1){
+			if($nextanchor eq "" || $freeanchorlist eq "list"){	
+				@getfgt3=split('\*',$getfgt2[$anj]); # in @getfgt3 0 = no fgt and in 1 = connecting atom
+				$lelego=$getfgt4[$getfgt3[0]-1];
+				$nocc=0;
+				$car=$whichfgtbis;
+				$nocc=$car=~s/ $getfgt3[0]\*/ $getfgt3[0]\*/g;
+				#print "lego anchors=$typelego[$lelego] but $nocc occupied\n";
+				$nbfreeanchor=$typelego[$lelego]-$nocc;
+				if($typelego[$lelego] > 1 && $nbfreeanchor > 0){	
+
+					#remove anchors that are already substituted
+					$tmpanchor=" ".$points[$lelego]." ";
+					#print "$lelego $points[$lelego] :  before removing already substituted anchors: $tmpanchor\n";
+					foreach $ank (0..@getfgt-1){
+						@getfgt4bis=split('-',$getfgt[$ank]);
+						foreach $anl (0..@getfgt4bis-1){
+							@getfgt5=split('\*',$getfgt4bis[$anl]);
+							if($getfgt5[0]==$getfgt3[0]){
+								$tmpanchor=~s/ $getfgt5[1] /  /; #one time !
+							};
+						};
+					};
+					#print "after removing already substituted anchors: $tmpanchor\n";
+					@getpoint=split(' ',$tmpanchor);
+					if($getpoint[0] eq ""){
+						print "Warning: all anchors substituted: inconsistencies with $nocc!\n";
+					}
+					else{
+						#print "after removing already substituted anchors: $tmpanchor\n";
+						$longtabpoint=@getpoint;
+						$randpoint=int(rand($longtabpoint));
+						$tmpanchor=$getfgt3[0]."*".$getpoint[$randpoint];
+						$nextanchor=$tmpanchor;
+						foreach $ank (0..@getpoint-1){
+							if($oldlistnextanchor!~/ $getfgt3[0]\*$getpoint[$ank] /){
+								$listnextanchor=$listnextanchor." ".$getfgt3[0]."*".$getpoint[$ank]." ";
+							};	
+						};	
+					};
+				}
+				elsif($nblegoinping==1 && $ani==0 && $anj==0){
+					#$nextanchor=$getfgt3[1];	
+					$nextanchor=$getfgt3[0]."*".$getfgt3[1];
+
+					@getpoint=split(' ',$points[$lelego]);
+					foreach $ank (0..@getpoint-1){
+						$listnextanchor=$listnextanchor." ".$getfgt3[0]."*".$getpoint[$ank]." ";
+					};	
+				}
+				else{
+					#print "lego $lelego only one connection\n";
+				};
+			};
+		};
+	};
+	$nextanchor=$listnextanchor if($freeanchorlist eq "list");
+	$nextanchor;	
+};
+
+#############################################################################
+
+sub getsimilarlego {
+
+        local($whichlego,$whichmol,$whichmolping)=@_;
+
+        $whichfgtbis=" ".$whichmol." ";
+        $whichfgtbis=~s/-/ /g;
+        $whichfgtbis=~s/_/ /g;
+#       print "whichfgtbis -$whichfgtbis- / $whichmolping\n";
+
+        @getfgt4=split(' ',$whichmolping);
+        $tolego=$getfgt4[$whichlego-1];
+        $nocc=0;
+        $car=$whichfgtbis;
+        $nocc=$car=~s/ $whichlego\*/ $whichlego\*/g;
+        $nbxwhichlego=$nocc;
+        #$nbxwhichlego=0;
+        #@getfgt=split('_',$whichmol);
+        #foreach $ani (0..@getfgt-1){
+        #        @getfgt2=split('-',$getfgt[$ani]);
+        #        foreach $anj (0..@getfgt2-1){
+        #               @getfgt3=split('\*',$getfgt2[$anj]); # in @getfgt3 0 = no fgt and in 1 = connecting atom
+        #                       if($getfgt3[0]==$whichlego){
+        #                               $nbxwhichlego++;
+        #                       };
+        #               };
+        #};
+        #print "Mol with lego $whichlego (=$tolego) linked with $nbxwhichlego other legos\n";
+        #print "cycle=$legoc[$tolego] nba=$legonba[$tolego] lip=$legolip[$tolego]\n";
+
+        $lelego_list="";
+        for $fi (1..$legoi){
+        if($fi!=$tolego){
+                if($typelego[$fi]>=$nbxwhichlego){
+                        if(($legoc[$tolego] ne "" && $legoc[$fi] ne "") || ($legoc[$tolego] eq "" && $legoc[$fi] eq "")){
+                                if($legonba[$tolego]==$legonba[$fi]){
+                                        if(($legolip[$tolego] ne "" && $legolip[$fi] ne "") || ($legolip[$tolego] eq "" && $legolip[$fi] eq "")){
+                                                $lelego_list=$lelego_list." ".$fi;
+                                        };
+                                };
+                        };
+                };
+        };
+        };
+        @getfgt=split(' ',$lelego_list);
+        $lengetfgt=@getfgt;
+        $randpoint=int(rand($lengetfgt));
+        $lelego=$getfgt[$randpoint];
+        #print "Select $lelego among list $lelego_list\n";
+        print "Select $lelego among a list of $lengetfgt legos\n";
+
+        $lelego;
+};
+
+#############################################################################
+
+sub memo_print{
+	local($geni,$visui,$visuj,$file)=@_;
+
+	print  "| generation | Rank | sdf file no |  Score  | Fragments                              |\n";
+	
+	if($file ne "" && -e "$file"){
+		open(OIJ,">>$file");
+		print OIJ "| generation | Rank | sdf file no |  Score  | Fragments                              |\n";
+	}
+	else{
+		print "memo_print:  $file does not exists!\n";
+	};
+	open(OIP,">popopop.txt");
+	
+	foreach $k ($visui..$visuj){
+		foreach $j (0..@memo_gi-1){
+			if($memo_gen[$j]==$geni && $memo_rank[$j]==$k){
+				
+printf "| %10s | %4d | %11s | %7.2f | %25s / %10s |\n",$memo_gen[$j],$memo_rank[$j],($memo_gi[$j]+1),$memo_score[$j],$memo_mol[$j],$memo_molping[$j];
+				
+if($file ne "" && -e "$file"){
+printf OIJ "| %10s | %4d | %11s | %7.2f | %25s / %10s |\n",$memo_gen[$j],$memo_rank[$j],($memo_gi[$j]+1),$memo_score[$j],$memo_mol[$j],$memo_molping[$j];
+};
+
+			$dvt=0;
+			if($dvt){
+				print "\n";
+				print "Generation $memo_gen[$j]\n";
+				$memogi2=$memo_gi[$j]+1;
+				print "Molecule number $memogi2 (indice $memo_gi[$j])\n";
+				print "Fragments $memo_mol[$j] / $memo_molping[$j]\n";
+				print "Datablock\n$memo_datablock[$j]";
+				print "Number of conformers= $memo_nbconf[$j]\n";
+				print "Best conformers= $memo_conf[$j]\n";
+				print "Properties:\n$memo_properties[$j]";
+				print "Score= $memo_score[$j]\n";
+				print "Rank= $memo_rank[$j]\n";	
+				print "SDF file:\n$memo_sdf[$j]\n" if($sdfyes==1);
+				print "MOL2 file:\n$memo_mol2[$j]\n" if($mol2yes==1);
+				print "Remarks:\n$memo_remark[$j]\n";
+			};
+
+			printf OIP "$memo_mol[$j] / $memo_molping[$j]\n";
+			
+			};	
+		};
+	};	
+	close(OIJ) if($file ne "" && -e "$file");
+	close(OIP);
+};
+
+#############################################################################
