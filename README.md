@@ -121,8 +121,7 @@ Bibtex format :
     month = {05},
     issn = {0305-1048},
     doi = {10.1093/nar/gkq322},
-    url = {https://doi.org/10.1093/nar/gkq322},
-    eprint = {https://academic.oup.com/nar/article-pdf/38/suppl\_2/W615/3840408/gkq322.pdf},
+    url = {https://academic.oup.com/nar/article/38/suppl_2/W615/1099650},
     }
     
     @article{10.1023/A:1008108423895,
@@ -135,7 +134,6 @@ Bibtex format :
     year = {2000},
     doi = {10.1023/A:1008108423895},
     url = {https://doi.org/10.1023/A:1008108423895},
-    eprint = {https://academic.oup.com/nar/article-pdf/38/suppl\_2/W615/3840408/gkq322.pdf},
     }
 
 
