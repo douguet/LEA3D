@@ -3,19 +3,21 @@ Computer-Aided Molecular Design program
 
 [![badgepython](https://forthebadge.com/images/badges/made-with-python.svg)](https://www.python.org/downloads/release/python-370/)  [![forthebadge](https://forthebadge.com/images/badges/built-with-science.svg)](https://chemoinfo.ipmc.cnrs.fr/)
 
-**LEA3D** is a de novo design software which allows to optimize the structure of molecules. It is based on the publications: [LEA3D: A Computer-Aided Ligand Design for Structure-Based Drug Design](https://pubs.acs.org/doi/10.1021/jm0492296); [e-LEA3D: a computational-aided drug design web server](https://pubs.acs.org/doi/10.1021/jm0492296) [LEA (Ligand by Evolutionary Algorithm): A Genetic Algorithm for the Automated Generation of Small Organic Molecules](https://link.springer.com/article/10.1023/A:1008108423895)
+**LEA3D** is a de novo design software which allows to optimize the structure of molecules. It is based on the following publications: [LEA3D: A Computer-Aided Ligand Design for Structure-Based Drug Design](https://pubs.acs.org/doi/10.1021/jm0492296); [e-LEA3D: a computational-aided drug design web server](https://pubs.acs.org/doi/10.1021/jm0492296) [LEA (Ligand by Evolutionary Algorithm): A Genetic Algorithm for the Automated Generation of Small Organic Molecules](https://link.springer.com/article/10.1023/A:1008108423895)
+
+LEA3D (Ligand by Evolutionary Algorithm) is designed to create new molecules by using a library of molecular fragments and by determining best combinations of molecular fragments that fit user-defined physicochemical properties (also called constraint function or fitness function). LEA3D is based on a genetic algorithm that evolves the molecular structures generation after generation until the appearance of fitted molecules. Each molecule of each generation is evaluated thanks to a fitness function (constraints) which can be either molecular properties, an affinity prediction by a docking program…
 
 Here, we provide the core of LEA3D that could be used or modified.  
 
 ![example](/images/LEA3D.png)
 
-**Documentation**: [Manual-LEA3D-core.pdf](https://github.com/LEA3D/lea3d/blob/main/docs/Manual-LEA3D-core.pdf)
+**Documentation**: [Manual-LEA3D-core.pdf](https://github.com/LEA3D/lea3d/main/docs/Manual-LEA3D-core.pdf)
 
 **Website**: A webserver dedicated to drug design is available at https://chemoinfo.ipmc.cnrs.fr/LEA3D/index.html
 
 ## Requirements
 
-LEA3D uses **Perl and Python3.7**. Of note, JavaScript is only used to create html pages to display results.
+LEA3D uses **Perl and Python3.7**. Of note, JavaScript is only used to create html pages to display results. Here, we also use the RDKit package to calculate molecular properties. 
 
 
 ## Virtual environment for python with conda (for Windows for example)
@@ -24,13 +26,12 @@ Install conda or Miniconda from [https://conda.io/miniconda.html](https://conda.
 Launch Anaconda Prompt, then complete the installation:
 
 	conda update conda
-	conda create -n sensaas
-	conda activate sensaas
+	conda create -n lea3d
+	conda activate lea3d
 	conda install python=3.7 numpy
- 
-Once Open3D downloaded:
-  
- 	conda install open3d-0.12.0-py37_0.tar.bz2
+ 	conda install perl
+  	conda install -c conda-forge rdkit
+   	conda install matplotlib
 
 (Optional) Additional packages for visualization with PyMOL:
 
@@ -40,7 +41,7 @@ Once Open3D downloaded:
  
  	conda install -c anaconda pyqt
 	
-Retrieve and unzip SENSAAS-PY repository in your desired folder. See below for running the program **sensaas.py** or **meta-sensaas.py**. The directory containing executables is called sensaas-py-main.
+Retrieve and unzip LEA3D repository in your desired folder. See below for running the program **lea3d**. The directory containing executables is called lea3d-main.
 
 ## Linux
 
