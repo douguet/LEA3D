@@ -9,13 +9,13 @@ Here, we provide the core of LEA3D that could be used or modified.
 
 ![example](/images/LEA3D.png)
 
-**Documentation**: Full documentation is available at [Manual](https://github.com/LEA3D/lea3d/blob/main/docs/Manual-LEA3D-core.pdf)
+**Documentation**: [Manual-LEA3D-core.pdf](https://github.com/LEA3D/lea3d/blob/main/docs/Manual-LEA3D-core.pdf)
 
 **Website**: A webserver dedicated to drug design is available at https://chemoinfo.ipmc.cnrs.fr/LEA3D/index.html
 
 ## Requirements
 
-LEA3D uses **Perl and Python3.7**. Of note, JavaScripts is only used to create html pages to display results.
+LEA3D uses **Perl and Python3.7**. Of note, JavaScript is only used to create html pages to display results.
 
 
 ## Virtual environment for python with conda (for Windows for example)
