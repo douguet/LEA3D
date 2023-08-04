@@ -5,11 +5,14 @@ Computer-Aided Molecular Design program
 
 **LEA3D** is a de novo design software which allows to optimize the structure of molecules. It is based on the following publications: [LEA3D: A Computer-Aided Ligand Design for Structure-Based Drug Design](https://pubs.acs.org/doi/10.1021/jm0492296); [e-LEA3D: a computational-aided drug design web server](https://pubs.acs.org/doi/10.1021/jm0492296) [LEA (Ligand by Evolutionary Algorithm): A Genetic Algorithm for the Automated Generation of Small Organic Molecules](https://link.springer.com/article/10.1023/A:1008108423895)
 
-LEA3D (Ligand by Evolutionary Algorithm) is designed to create new molecules by using a library of molecular fragments and by determining best combinations of molecular fragments that fit user-defined physicochemical properties (also called constraint function or fitness function). LEA3D is based on a genetic algorithm that evolves the molecular structures generation after generation until the appearance of fitted molecules. Each molecule of each generation is evaluated thanks to a fitness function (constraints) which can be either molecular properties, an affinity prediction by a docking program…
-
-Here, we provide the core of LEA3D that could be used or modified.  
+LEA3D (Ligand by Evolutionary Algorithm) is designed to create new molecules by using a library of molecular fragments (structures in 3D) and by determining best combinations of molecular fragments that fit user-defined physicochemical properties (also called constraint function or fitness function). LEA3D is based on a genetic algorithm that evolves the molecular structures generation after generation until the emergence of fitted molecules. Each molecule of each generation is evaluated thanks to a fitness function (constraints) which can be either molecular properties, an affinity prediction by a docking program…
 
 ![example](/images/LEA3D.png)
+
+Figure 1. General flowchart for LEA genetic algorithm.
+An initial population of candidate solutions is generated, usually, by random process but an option allows to start with a pool of molecules. The fitness of each candidate is evaluated via a fitness function (or score), which takes as input a candidate solution and returns a numeric score. Selection criteria are applied to choose candidates based on their fitness score for breeding. Breeding functions, crossover and mutations (suppress, add, replace or permutate a fragment), are applied to produce new solutions that replace the parent solutions. The cycle (or generation g) continues until convergence criteria is met (usually, solutions are no more improved). 
+
+Here, we provide the core of LEA3D that could be used or modified by adapting new fitness functions and/or libraries of fragments.
 
 **Documentation**: [Manual-LEA3D-core.pdf](https://github.com/LEA3D/lea3d/main/docs/Manual-LEA3D-core.pdf)
 
