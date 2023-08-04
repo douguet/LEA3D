@@ -51,7 +51,16 @@ Retrieve and unzip LEA3D repository in your desired folder. See below for runnin
 Create a folder "Project", copy examples from the folder "examples" and launch conda
 
  	conda activate lea3d
- 	
+
+**1. Use lea3d to design molecules using some molecular properties of the aspirin molecular structure**
+
+Here, the file ligand-aspirin.func is read (its name is indicated in file ligand-aspirin.in). It contains 4 properties to evaluate (number of atoms, molecular weight, fsp3 value and 2 chemical functions (ester + acid)).
+
+	perl ../lea3d-main/MAIN ligand-aspirin.in
+ 
+ To visualize the best candidate of each generation:
+ 
+ 	pymol VISU/list.sdf
 **1. Use lea3d to generate 3 molecules using the combination of legos**
 	
 	perl ../lea3d-main/MAIN -v ligand-aspirin.in list_mol_sulfapyridine-aspirin_venetoclax
