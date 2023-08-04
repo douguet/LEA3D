@@ -92,7 +92,7 @@ Copyright (c) 2018-2021, CNRS, Inserm, Université Côte d'Azur, Dominique Dougu
 
 [Douguet D., Munier-Lehmann H., Labesse G. and Pochet S., LEA3D: A Computer-Aided Ligand Design for Structure-Based Drug Design, J. Med. Chem., 2005, 48, 2457-2468](https://pubs.acs.org/doi/10.1021/jm0492296). doi: 10.1021/jm0492296
 
-[Douguet D., e-LEA3D: a computational-aided drug design web server, Nucleic Acids Res., 2010, 38, Suppl:W615-21](https://pubs.acs.org/doi/10.1093/nar/gkq322). doi: 10.1093/nar/gkq322
+[Douguet D., e-LEA3D: a computational-aided drug design web server, Nucleic Acids Res., 2010, 38, Suppl:W615-21](https://academic.oup.com/nar/article/38/suppl_2/W615/1099650). doi: 10.1093/nar/gkq322
 
 [Douguet D., Thoreau E. and Grassy G., LEA (Ligand by Evolutionary Algorithm): A Genetic Algorithm for the Automated Generation of Small Organic Molecules, J. Comput.-Aided  Mol. Design, 2000, 14, 449-466.](https://link.springer.com/article/10.1023/A:1008108423895). doi: 10.1023/A:1008108423895
    
