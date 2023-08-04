@@ -5,15 +5,17 @@ Computer-Aided Molecular Design program
 
 **LEA3D** is a de novo design software which allows to optimize the structure of molecules. It is based on the publications: [LEA3D: A Computer-Aided Ligand Design for Structure-Based Drug Design](https://pubs.acs.org/doi/10.1021/jm0492296); [e-LEA3D: a computational-aided drug design web server](https://pubs.acs.org/doi/10.1021/jm0492296) [LEA (Ligand by Evolutionary Algorithm): A Genetic Algorithm for the Automated Generation of Small Organic Molecules](https://link.springer.com/article/10.1023/A:1008108423895)
 
+Here, we provide the core of LEA3D that could be used or modified.  
+
 ![example](/images/LEA3D.png)
 
-**Documentation**: Full documentation is available at [https://github.com/LEA3D/lea3d/blob/main/docs/index.rst](https://github.com/LEA3D/lea3d/blob/main/docs/index.rst)
+**Documentation**: Full documentation is available at [Manual](https://github.com/LEA3D/lea3d/blob/main/docs/Manual-LEA3D-core.pdf)
 
 **Website**: A webserver dedicated to drug design is available at https://chemoinfo.ipmc.cnrs.fr/LEA3D/index.html
 
 ## Requirements
 
-LEA3D uses **Perl and Python3.7**. Javascripts are only used to create html pages to display results
+LEA3D uses **Perl and Python3.7**. Of note, JavaScripts is only used to create html pages to display results.
 
 
 ## Virtual environment for python with conda (for Windows for example)
