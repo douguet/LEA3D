@@ -86,7 +86,7 @@ In this example, the objective is to use the program to evaluate the fitness fun
 LEA3D code is released under [the 3-Clause BSD License](https://opensource.org/licenses/BSD-3-Clause)
 
 ## Copyright
-Copyright (c) 2018-2021, CNRS, Inserm, Université Côte d'Azur, Dominique Douguet, All rights reserved.
+Copyright (c) 2018-2021, CNRS, Inserm, Dominique Douguet, All rights reserved.
 
 ## Reference
 
