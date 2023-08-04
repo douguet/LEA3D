@@ -3,7 +3,7 @@ Computer-Aided Molecular Design program
 
 [![badgepython](https://forthebadge.com/images/badges/made-with-python.svg)](https://www.python.org/downloads/release/python-370/)  [![forthebadge](https://forthebadge.com/images/badges/built-with-science.svg)](https://chemoinfo.ipmc.cnrs.fr/)
 
-**LEA3D** is a de novo design software which allows to optimize the structure of molecules. It is based on the following publications: [LEA3D: A Computer-Aided Ligand Design for Structure-Based Drug Design](https://pubs.acs.org/doi/10.1021/jm0492296); [e-LEA3D: a computational-aided drug design web server](https://pubs.acs.org/doi/10.1021/jm0492296) [LEA (Ligand by Evolutionary Algorithm): A Genetic Algorithm for the Automated Generation of Small Organic Molecules](https://link.springer.com/article/10.1023/A:1008108423895)
+**LEA3D** is a de novo design software which allows to optimize the structure of molecules. It is based on the following publications: [LEA3D: A Computer-Aided Ligand Design for Structure-Based Drug Design](https://pubs.acs.org/doi/10.1021/jm0492296); [e-LEA3D: a computational-aided drug design web server](https://pubs.acs.org/doi/110.1093/nar/gkq322) [LEA (Ligand by Evolutionary Algorithm): A Genetic Algorithm for the Automated Generation of Small Organic Molecules](https://link.springer.com/article/10.1023/A:1008108423895)
 
 LEA3D (Ligand by Evolutionary Algorithm) is designed to create new molecules by using a library of molecular fragments (structures in 3D) and by determining best combinations of molecular fragments that fit user-defined physicochemical properties (also called constraint function or fitness function). LEA3D is based on a genetic algorithm that evolves the molecular structures generation after generation until the emergence of fitted molecules. Each molecule of each generation is evaluated thanks to a fitness function (constraints) which can be either molecular properties, an affinity prediction by a docking program…
 
@@ -48,20 +48,22 @@ Retrieve and unzip LEA3D repository in your desired folder. See below for runnin
 
 
 ## Run LEA3D
-Create a folder "Project", copy examples from the folder "examples" and launch conda
+Create a folder called "Project", copy the content of the folder “examples” in Project directory and launch conda
 
  	conda activate lea3d
 
 **1. Use lea3d to design molecules using some molecular properties of the aspirin molecular structure**
 
-Here, the file ligand-aspirin.func is read (its name is indicated in file ligand-aspirin.in). It contains 4 properties to evaluate (number of atoms, molecular weight, fsp3 value and 2 chemical functions (ester + acid)).
+In this example, the file ligand-aspirin.in defines parameters of the genetic algorithm (a population of 10 molecules that will evolve over 30 generations) and indicates the fitness function file to read (ligand-aspirin.func). The fitness function includes 4 properties to evaluate (number of atoms, molecular weight, fsp3 value and the presence of 2 chemical functions (ester + acid)).
 
 	perl ../lea3d-main/MAIN ligand-aspirin.in
  
  To visualize the best candidate of each generation:
  
  	pymol VISU/list.sdf
-**1. Use lea3d to generate 3 molecules using the combination of legos**
+  
+**2. Use lea3d to generate 3 molecules using the combination of legos**
+In this example, the objective is to build molecules that are already encoded without evaluation of any properties. The file list_mol_sulfapyridine-aspirin_venetoclax contains the encoding for three molecules (one per line) and the file ligand-aspirin.in indicates which library of fragment to use (here, the SDF file called all.sdf from the folder LEGO).
 	
 	perl ../lea3d-main/MAIN -v ligand-aspirin.in list_mol_sulfapyridine-aspirin_venetoclax
  
@@ -69,11 +71,11 @@ Here, the file ligand-aspirin.func is read (its name is indicated in file ligand
  
  	pymol mol_1.sdf mol_2.sdf mol3.sdf
 
-**2. Use lea3d to design molecules using some aspirin molecular properties**
+**3. Use lea3d to evaluate molecules using the fitness function**
 
-Here, the file ligand-aspirin.func is read (its name is indicated in file ligand-aspirin.in). It contains 4 properties to evaluate (number of atoms, molecular weight, fsp3 value and 2 chemical functions (ester + acid)).
+In this example, the objective is to use the program to evaluate the fitness function of a SDF file of molecules. The input file is given as input and the file ligand-aspirin.in indicates the fitness function file to use (ligand-aspirin.func).
 
-	perl ../lea3d-main/MAIN ligand-aspirin.in
+	perl ../lea3d-main/MAIN -e  ligand-aspirin.in 
  
  To visualize the best candidate of each generation:
  
@@ -87,20 +89,53 @@ LEA3D code is released under [the 3-Clause BSD License](https://opensource.org/l
 Copyright (c) 2018-2021, CNRS, Inserm, Université Côte d'Azur, Dominique Douguet, All rights reserved.
 
 ## Reference
-[Douguet D. and Payan F., SenSaaS: Shape-based Alignment by Registration of Colored Point-based Surfaces, *Molecular Informatics*, **2020**, 8, 2000081](https://onlinelibrary.wiley.com/doi/full/10.1002/minf.202000081). doi: 10.1002/minf.202000081
+
+[Douguet D., Munier-Lehmann H., Labesse G. and Pochet S., LEA3D: A Computer-Aided Ligand Design for Structure-Based Drug Design, J. Med. Chem., 2005, 48, 2457-2468](https://pubs.acs.org/doi/10.1021/jm0492296). doi: 10.1021/jm0492296
+
+[Douguet D., e-LEA3D: a computational-aided drug design web server, Nucleic Acids Res., 2010, 38, Suppl:W615-21](https://pubs.acs.org/doi/10.1093/nar/gkq322). doi: 10.1093/nar/gkq322
+
+[Douguet D., Thoreau E. and Grassy G., LEA (Ligand by Evolutionary Algorithm): A Genetic Algorithm for the Automated Generation of Small Organic Molecules, J. Comput.-Aided  Mol. Design, 2000, 14, 449-466.](https://link.springer.com/article/10.1023/A:1008108423895). doi: 10.1023/A:1008108423895
    
 Bibtex format :
 
-	@article{10.1002/minf.202000081,
-	author 		= {Douguet, Dominique and Payan, Frédéric},
-	title 		= {sensaas: Shape-based Alignment by Registration of Colored Point-based Surfaces},
-	journal 	= {Molecular Informatics},
-	volume 		= {39},
-	number 		= {8},
-	pages 		= {2000081},
-	keywords 	= {Shape-based alignment, molecular surfaces, point clouds, registration, molecular similarity},
-	doi 		= {https://doi.org/10.1002/minf.202000081},
-	url 		= {https://onlinelibrary.wiley.com/doi/abs/10.1002/minf.202000081},
-	eprint 		= {https://onlinelibrary.wiley.com/doi/pdf/10.1002/minf.202000081},
-	year 		= {2020}
-	}
+    @article{doi:10.1021/jm0492296,
+    author = {Douguet, Dominique and Munier-Lehmann, Hélène and Labesse, Gilles and Pochet, Sylvie},
+    title = {LEA3D: A Computer-Aided Ligand Design for Structure-Based Drug Design},
+    journal = {Journal of Medicinal Chemistry},
+    volume = {48},
+    number = {7},
+    pages = {2457-2468},
+    year = {2005},
+    doi = {10.1021/jm0492296},
+    url = {https://pubs.acs.org/doi/10.1021/jm0492296},
+    }
+    
+    @article{10.1093/nar/gkq322,
+    author = {Douguet, Dominique},
+    title = "{e-LEA3D: a computational-aided drug design web server}",
+    journal = {Nucleic Acids Research},
+    volume = {38},
+    number = {suppl_2},
+    pages = {W615-W621},
+    year = {2010},
+    month = {05},
+    issn = {0305-1048},
+    doi = {10.1093/nar/gkq322},
+    url = {https://doi.org/10.1093/nar/gkq322},
+    eprint = {https://academic.oup.com/nar/article-pdf/38/suppl\_2/W615/3840408/gkq322.pdf},
+    }
+    
+    @article{10.1023/A:1008108423895,
+    author = {Douguet, Dominique and Thoreau, Etienne and Grassy, Gerard},
+    title = "{A genetic algorithm for the automated generation of small organic molecules: Drug design using an evolutionary algorithm}",
+    journal = {Journal of Computer-Aided Molecular Design},
+    volume = {14},
+    number = {},
+    pages = {449-466},
+    year = {2000},
+    doi = {10.1023/A:1008108423895},
+    url = {https://doi.org/10.1023/A:1008108423895},
+    eprint = {https://academic.oup.com/nar/article-pdf/38/suppl\_2/W615/3840408/gkq322.pdf},
+    }
+
+
