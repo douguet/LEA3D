@@ -10,8 +10,12 @@ fsp3		0.3	-	0.0	# number of Csp3/number of C - Favorable if >= 0.3
 #logp		-	6.0	0.0	# Lipinski rule (LogP <= 5)
 logp            -       4.8     0.0     # 90th percentile (Proudfoot et al, Bioorg Med Chem Letters, 15, 1087-90, 2005)
 
+#radius of gyration
 rg		-	2.0	0.0
 
+# Diagonalized and normalized components Ixx and Iyy of the moment of inertia tensor (Izz=1)
+# We used the convention that the larger value (ix,iy) is assigned to iy
+# iy [0.5-1] and ix [0-0.8] for drugs and iy > ix
 ix		-       -       0.0	# Akritopoulou-zanze et al, DDT, 12, 948-952, 2007 
 iy		-       -       0.0	# Diagonalized and normalized components Ixx and Iyy of the moment of inertia tensor (Izz=1) 
 
@@ -25,5 +29,13 @@ nbha            -       9       0.0     # 90th percentile (Proudfoot et al, Bioo
 
 nbatom		10	70	0.0	# Ghose et al., J. Comb. Chem., 1, 55-68, 1999 (20 <= Nbatoms <= 70) ; Lepre, DDT, 6(3), 2001 (10 <= Nbatoms <= 70) ; Lipinski rule (Nbatoms <= 50) (hydrogens are excluded)
 
+#chemical function property
+#The lower and upper limits are always set to 1. The list of the request chemical functions is indicated at the fifth position
+#The separator between 2 chemical functions is ‘_’.
+#Each chemical function has a proportional weight (the total weight is divided by the number of chemical functions).
+#The searchable chemical functions are:
+# acid ester carbamate amide amide-ter aldhehyde keto amine amine1 amine2 amine3 alcohol alcohol1 alcohol2 alcohol3 ether thiol carbonyl C O N S P F Cl Br I
+#of note: amine1 refers to a primary amine, amine2 refers to secondary amine, amine3 refers to tertiary amine and amine refers to any type of amine. 
+#of note alcohol1 refers to primary alcohol, alcohol2 refers to secondary alcohol, alcohol3 refers to tertiary alcohol and alcohol refers to any type of alcohol. 
 function 	1	1	0.0	acid_alcohol
 
