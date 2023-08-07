@@ -74,7 +74,7 @@ Plot the maximum, minimum and average scores in function of the generation numbe
 
  ![example](/images/best-candidate.png)
 
-The best candidate of the run is the last molecule of the file list.sdf
+The best candidate of the run is shown in the above Figure: it is the last molecule of the file list.sdf
 
 
 **2. Use lea3d to generate 3 molecules using a pre-defined combination of legos**
@@ -88,6 +88,9 @@ Execute:
  To visualize the three generated molecules:
  
  	pymol mol_1.sdf mol_2.sdf mol_3.sdf
+
+ ![example](/images/three-molecules.png)
+ 
 
 **3. Use lea3d to evaluate molecules using the fitness function**
 
