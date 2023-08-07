@@ -64,7 +64,7 @@ The file summary.txt indicates the score of candidate molecules of the last gene
 
 Plot the maximum, minimum and average scores in function of the generation number
 
-	python ../lea3d-main/plot-scores.py fitmoy.dat
+	python ../lea3d-main/utils/plot-scores.py fitmoy.dat
 
  ![example](/images/plot.png)
  
@@ -72,8 +72,9 @@ Plot the maximum, minimum and average scores in function of the generation numbe
  
  	pymol VISU/list.sdf
   
-**2. Use lea3d to generate 3 molecules using the combination of legos**
-In this example, the objective is to build molecules that are already encoded without evaluation of any properties. The file list_mol_sulfapyridine-aspirin_venetoclax contains the encoding for three molecules (one per line) and the file ligand-aspirin.in indicates which library of fragment to use (here, the SDF file called all.sdf from the folder LEGO).
+**2. Use lea3d to generate 3 molecules using a pre-defined combination of legos**
+
+In this example, the objective is to build molecules that are already encoded without evaluation of any properties. The file list_mol_sulfapyridine-aspirin_venetoclax contains the encoding for three molecules (one per line) and the file ligand-aspirin.in indicates which library of fragment to use (here, the default SDF file called all.sdf from the folder LEGO).
 
 Execute:
 
@@ -90,12 +91,15 @@ In this example, the objective is to use the program to evaluate the fitness fun
 Execute:
 
 	perl ../lea3d-main/MAIN -e ligand-aspirin.in three-molecules.sdf
- 
+
+The output is written on the screen:
+
 ![example](/images/result-lea3d-evaluation.png)
 
 As indicated on the output, molecule number 2 in the sdf file has a score of 100%. This was expected as the aspirin itself is the second molecule of the file three-molecules.sdf. The file summary.txt indicates the score of screened molecules ranked in descending order of score.
 
-  
+** A more detailed description of the package can be found in the manual in docs folder (Parameter setting, How to create fragments, how to customize the core version of LEA3D...). **
+
 ## Licenses
 LEA3D code is released under [the 3-Clause BSD License](https://opensource.org/licenses/BSD-3-Clause)
 
