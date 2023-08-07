@@ -80,6 +80,8 @@ Ligand by Evolutionary Algorithm
 
 Author: D. Douguet
 
+Further information contact: douguet\@ipmc.cnrs.fr
+
 ########################################################################
 
 References:
@@ -108,7 +110,7 @@ lea     -r      <ligand.in>
 
 lea     <ligand.in>
 
-lea     -v      <ligand.in>    <file with one molecule per line (e.g.: 1*5-3*1_1*6-2*1 / 16 1220 1361 )>
+lea     -v      <ligand.in>    <file with one molecule per line (e.g.: 1*7-2*4 / 2456 3682)>
 
 
 ########################################################################
@@ -382,8 +384,16 @@ if($optionlea eq "" || $optionlea eq "-e" || $optionlea eq "-r"){
 		}
 		else{
 			#Check for X dummy atoms
-			chop($rep=`grep 'X' $param{GET_POOL} | wc -l`);
-			$rep=~s/ //g;
+			$rep="";
+			#chop($rep=`grep 'X' $param{GET_POOL} | wc -l`);
+			open(PARAM,"<$param{GET_POOL}");
+                	while(<PARAM>){
+                        	if($_=~/ X /){
+					$rep=1;
+				};
+			};
+                	close(PARAM);
+			#$rep=~s/ //g;
 			if($rep eq "" || $rep==0){
 				die "Error in option -r: $param{GET_POOL} does not contain X anchors\n";
 			}
@@ -416,8 +426,9 @@ if($optionlea eq "" || $optionlea eq "-v" || $optionlea eq "-r"){
 		if($bn[0] eq ""){
 			print "no fragment database have been selected. Get LEGO from eDESIGN:\n";
 			if($platform eq "linux" || $platform eq "darwin"){
-				chop($tmp=`ls $leafgt/*.sdf`);
+				#chop($tmp=`ls $leafgt/*.sdf`);
 				#print "$tmp\n";
+				$tmp="$leafgt/all.sdf";
 			}
 			else{
 				$tmp="$leafgt/all.sdf";
@@ -595,8 +606,16 @@ if($optionlea eq "" || $optionlea eq "-v" || $optionlea eq "-r"){
 
 		if($scaffoldpoints eq ""){
 			#perhaps <POINTS>
-			chop($rep=`grep 'POINTS' $param{SCAFFOLD} | wc -l`);
-			$rep=~s/ //g;
+			$rep="";
+			#chop($rep=`grep 'POINTS' $param{SCAFFOLD} | wc -l`);
+                        open(PARAM,"<$param{SCAFFOLD}");
+                        while(<PARAM>){
+                                if($_=~/<POINTS>/){
+                                        $rep=1;
+                                };
+                        };
+                        close(PARAM);
+			#$rep=~s/ //g;
 			if($rep eq "" || $rep==0){
 				#perhaps X dummy atoms ?
 				#chop($rep=`$leaexe/GET_X.pl $param{SCAFFOLD}`);		
@@ -1717,7 +1736,7 @@ if($optionlea eq ""){
 	#system("grep \'>\' summary.out | awk \'{print \$5, \$7}\' > docking.out");
 	
 	print "\nNumber of evaluated molecules = $memi\n\n";
-	print "Visualization at ./VISU/visu.html (see also ./VISU/list.sdf, ./VISU/list.lst, fitmoy.dat (Genetic algorithm convergence) and summary.out)\n";
+	print "Visualization at ./VISU/visu.html (see also ./VISU/list.sdf (best candidate of each generation), ./VISU/list.lst, ./VISU/results.sdf (if docked or aligned), fitmoy.dat (Genetic algorithm convergence) and summary.out)\n";
 
 
 	#Case of Genetic Algorithm: Statistics on the population
@@ -1912,13 +1931,13 @@ sub getx{
 	$pasvu=1;
 	$ia=1;
 	$ja=0;
-	$compt=0;
+	$comp=0;
 	open(OUT,">$fsdfo");
 	open(IN,"<$fsdf");
 	while(<IN>){
 	        @getstr = split(' ',$_);
         	$comp++;
-                if ($compt == 4){
+                if ($comp == 4){
                         $istratom=$getstr[0];
                         $istrbond=$getstr[1];
 
@@ -2031,8 +2050,8 @@ sub getx{
                 	$point2="";
                 	$pasvu=1;
                 	$comp=0;
-                	$i=1;
-                	$j=0;
+                	$ia=1;
+                	$ja=0;
                 	print OUT $_;
         	}
         	elsif($ecrit){
@@ -2061,8 +2080,8 @@ sub diversity{
 		};	
 	};	
 	close(OIJ);
-	print "\nSee edesign.sdf to retreive all correctly converted molecules\n";
-	print "popopop.txt contains the lastest population - can be read as starting pool when using the START option in ligand.in\n";
+	print "\nedesign.sdf contains all correctly converted molecules\n";
+	print "popopop.txt contains the lastest population - can be read as starting pool when using the START option\n";
 
 ################# COMMENT  ##########################
 
