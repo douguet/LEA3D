@@ -1,71 +1,21 @@
 #############################################
-# Docking on the first and principal protein
-#############################################
-
-#DOCKING_PROGRAM FLEXX
-#dock -40 - 0.0 protein.pdb site.pdb - - - 5.0 -5 -
-
-#DOCKING_PROGRAM SURFLEX
-#dock - 15 0.0 protein.pdb site.pdb - - - 5.0 0 -
-
-#DOCKING_PROGRAM PLANTS
-#dock -150 - 0.0 protein.pdb site.pdb - - - 5.0 -5 -
-
-
-#e.g. if carboxylate then it must interacts with res number 99 (here a Ca atom)
-#interaction IF PROT_NORES_99 LIG_ATOMTYPE_O.co2
-
-#e.g. if ASP or GLU then oxygens must be distant from ligand negative charges of at least 2.0 A
-#interaction chargebumping 2.0
-
-#interaction PROT_RES_ASN PROT_NORES_100 LIG_ATOM_O
-
-#interaction PROT_RES_PHE PROT_NORES_404 PROT_ATOMTYPE_O LIG_ATOM_N  OR  PROT_RES_PHE PROT_NORES_404 PROT_ATOMTYPE_O LIG_ATOM_O
- 
-
-#############################################
-#  MULTIPLE DOCKING ending with { AND OR NOT } 
-#############################################
-
-
-#FLEXX
-#dock -40 - 0.0 protein.pdb site.pdb - - - 5.0 -5 - AND
-
-#SURFLEX
-#dock - 15 0.0 protein.pdb site.pdb - - - 5.0 0 - AND
-
-#PLANTS
-#dock -150 - 0.0 protein.pdb site.pdb - - - 5.0 -5 - AND 
-
-#############################################
 #  MOLECULAR PROPERTIES
 #############################################
-#
-#psa             - 	140	0.0	# Clark and Pickett, DDT, 5(2), 2000 
-#volume		-	-	0.0
-#area            -	-	0.0
 
 #mw		-	500	0.0	# Lipinski rule ; Ghose et al., J. Comb. Chem., 1, 55-68, 1999
 mw              -       469     0.0     # 90th percentile (Proudfoot et al, Bioorg Med Chem Letters, 15, 1087-90, 2005)
 
 fsp3		0.3	-	0.0	# number of Csp3/number of C - Favorable if >= 0.3
 
-#complexity	1	6	0.0	# Complexity = $nbring + $nbfring + $nbacyclic + $nbspecial 
-		
 #logp		-	6.0	0.0	# Lipinski rule (LogP <= 5)
 logp            -       4.8     0.0     # 90th percentile (Proudfoot et al, Bioorg Med Chem Letters, 15, 1087-90, 2005)
 
-#mr 		40	130	0.0	# Ghose et al., J. Comb. Chem., 1, 55-68, 1999 ; Lepre, DDT, 6(3), 2001
-
-#solubility	1	-	0.0	# Favorable if > 1g/l 
 rg		-	2.0	0.0
 
 ix		-       -       0.0	# Akritopoulou-zanze et al, DDT, 12, 948-952, 2007 
 iy		-       -       0.0	# Diagonalized and normalized components Ixx and Iyy of the moment of inertia tensor (Izz=1) 
 
 length         	-	-	0.0	# The distance between the farthest 2 atoms
-
-#dipole          -       -       0.0     #TSAR definition #only if CHARGES option has been set to GAS or AM1 in ligand.in !
 
 #nbhd            -	5	0.0	# Lipinski rule
 nbhd            -       3       0.0     # 90th percentile (Proudfoot et al, Bioorg Med Chem Letters, 15, 1087-90, 2005)
@@ -75,18 +25,5 @@ nbha            -       9       0.0     # 90th percentile (Proudfoot et al, Bioo
 
 nbatom		10	70	0.0	# Ghose et al., J. Comb. Chem., 1, 55-68, 1999 (20 <= Nbatoms <= 70) ; Lepre, DDT, 6(3), 2001 (10 <= Nbatoms <= 70) ; Lipinski rule (Nbatoms <= 50) (hydrogens are excluded)
 
-#rot		-	10	0.0	# number of rotatable bonds ; Veber, JMedChem, 45(12), 2002 (< 10) ; Lepre, DDT, 6(3), 2001 (2 <= nb <= 8)
-#nring		1	6	0.0	# number of rings ; Lepre, DDT, 6(3), 2001
-#nringa		-	3	0.0	# number of aromatic rings ; Lepre, DDT, 6(3), 2001
-
-#lipinski	1	1	0.0
-
 function 	1	1	0.0	acid_alcohol
 
-#pharmacophore 	1	1	0.0	AH DH  2.2 2.8
-
-#fingerprint	1	1	0.0 bit	tanimoto reference_molecule.sdf # already a percentage [0-1] (min and max are useless)
-
-#shape		1	1	0.0 ref.sdf source #mean or source or target already a percentage [0-1] (min and max are useless)
-
-#exactmatch	1	1	0.0 ref.sdf
