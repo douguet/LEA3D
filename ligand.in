@@ -73,7 +73,7 @@ FILTER 0
 #in default case, no scaffold:
 SCAFFOLD 0
 
-# ***** NOT described further in the Manual of LEA3D core *****
+# ***** NOT described in the Manual of LEA3D core and no tutorial *****
 # To create a combinatorial library (lea -r), a reactant library must be set
 #GET_POOL is a sdf file that contains molecules, each with only 1 'X' dummy atom that indicates
 #the connection site. For example:
