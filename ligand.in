@@ -56,17 +56,19 @@ CHARGES 0
 #in default case, it is not activated:
 FILTER 0
 
-#A SCAFFOLD can be imposed either in de novo drug design (lea) or to create a combinatorial
+#A SCAFFOLD can be imposed either in de novo molecular design (lea3d) or to create a combinatorial
 #library (lea -r). In the last case, the combinatorial library generator will connect the scaffold
 #to each molecule in GET_POOL.
 #There are 2 ways to indicate the atom(s) to connect:
 #1) in the scaffold sdf file, modify the hydrogen(s) element name 'H' that must be replaced by a
 #fragment by a 'X' dummy atom.
-#2) or indicate on same line the atom number on which the substitution must be done. For example, 
+#2) or indicate on the line the atom number on which the substitution must be done. For example, 
 #in the following case 'SCAFFOLD building_block.sdf 5 1', the atoms 5 and 1 can both be linked to a new substituent.
 #Note that the atom number 5 must be a heavy atom connected to a hydrogen (or 'X'). The hydrogen will be 
 #replaced by the fragment.
+#Here, building_block.sdf must contain a 'X' dummy atom:
 #SCAFFOLD building_block.sdf
+#Here, atom 5 or 1 will be linked to a new fragment
 #SCAFFOLD test.sdf 5 1
 #in default case, no scaffold:
 SCAFFOLD 0
