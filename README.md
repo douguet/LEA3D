@@ -98,7 +98,8 @@ The output is written on the screen:
 
 As indicated on the output, molecule number 2 in the sdf file has a score of 100%. This was expected as the aspirin itself is the second molecule of the file three-molecules.sdf. The file summary.txt indicates the score of screened molecules ranked in descending order of score.
 
-** A more detailed description of the package can be found in the manual in docs folder (Parameter setting, How to create fragments, how to customize the core version of LEA3D...). **
+
+**A more detailed description of the package can be found in the manual in docs folder (Parameter setting, How to create fragments, how to customize the core version of LEA3D...)**: [Manual-LEA3D-core.pdf](https://github.com/douguet/LEA3D/blob/main/docs/Manual-LEA3D-core.pdf)
 
 ## Licenses
 LEA3D code is released under [the 3-Clause BSD License](https://opensource.org/licenses/BSD-3-Clause)
