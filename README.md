@@ -74,6 +74,9 @@ Plot the maximum, minimum and average scores in function of the generation numbe
 
  ![example](/images/best-candidate.png)
 
+The best candidate of the run is the last molecule of the file list.sdf
+
+
 **2. Use lea3d to generate 3 molecules using a pre-defined combination of legos**
 
 In this example, the objective is to build molecules that are already encoded without evaluation of any properties. The file list_mol_sulfapyridine-aspirin_venetoclax contains the encoding for three molecules (one per line) and the file ligand-aspirin.in indicates which library of fragment to use (here, the default SDF file called all.sdf from the folder LEGO).
