@@ -91,6 +91,8 @@ In this example, the objective is to build molecules that are already encoded wi
 Execute:
 
 	perl ../LEA3D-main/MAIN -v ligand-aspirin.in list_mol_sulfapyridine-aspirin_venetoclax
+
+ Generated molecules are saved under the name mol_1.sdf, mol_2.sdf...
  
  To visualize the three generated molecules:
  
@@ -111,7 +113,7 @@ The output is written on the screen:
 
 ![example](/images/result-lea3d-evaluation.png)
 
-As indicated on the output, molecule number 2 in the sdf file has a score of 100%. This was expected as the aspirin itself is the second molecule of the file three-molecules.sdf. The file summary.txt indicates the score of screened molecules ranked in descending order of score.
+As indicated on the output, molecule number 2 in the sdf file has a score of 100%. This was expected as the aspirin itself is the second molecule of the file three-molecules.sdf. The file summary.out indicates the score of screened molecules ranked in descending order of score.
 
 
 **A more detailed description of the package can be found in the manual in docs folder (Parameter setting, How to create fragments, how to customize the core version of LEA3D...)**: [Manual-LEA3D-core.pdf](https://github.com/douguet/LEA3D/blob/main/docs/Manual-LEA3D-core.pdf)
