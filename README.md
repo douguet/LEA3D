@@ -67,7 +67,7 @@ Execute:
 
 	perl ../LEA3D-main/MAIN ligand-aspirin.in
 
-The file summary.txt indicates the score of candidate molecules of the last generation ranked in descending order. The file edesign.sdf contains all generated molecules over the run. The file VISU/list.sdf contains the best candidate molecule of each generation. The file popopop.txt contains the encoded molecules of the last generation. The file fitmoy.dat allows to plot the maximum, minimum and average scores in function of the generation number. In addition, the file operator.out records the crossover and mutation operations, indicates the difference in score value and which lego is involved (if any). It allows to analyze the efficiency of each operator. Of note, at the end of the run, the list of the privileged legos that improve candidate molecules is indicated.
+The file summary.out indicates the score of candidate molecules of the last generation ranked in descending order. The file edesign.sdf contains all generated molecules over the run. The file VISU/list.sdf contains the best candidate molecule of each generation. The file popopop.txt contains the encoded molecules of the last generation. The file fitmoy.dat allows to plot the maximum, minimum and average scores in function of the generation number. In addition, the file operator.out records the crossover and mutation operations, indicates the difference in score value and which lego is involved (if any). It allows to analyze the efficiency of each operator. Of note, at the end of the run, the list of the privileged legos that improve candidate molecules is indicated.
 
 Plot the maximum, minimum and average scores in function of the generation number
 
