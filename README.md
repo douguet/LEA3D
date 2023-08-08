@@ -50,7 +50,7 @@ Launch Anaconda Prompt, then complete the installation:
  
  	conda install -c anaconda pyqt
 	
-Retrieve and unzip LEA3D repository in your desired folder. See below for running the program **lea3d**. The directory containing executables is called lea3d-main.
+Retrieve and unzip LEA3D repository in your desired folder. See below for running the program. The decompressed directory containing executables is called LEA3D-main.
 
 
 ## Run LEA3D
