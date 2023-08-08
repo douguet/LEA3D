@@ -4,11 +4,11 @@ Computer-Aided Molecular Design program
 [![badgepython](https://forthebadge.com/images/badges/made-with-python.svg)](https://www.python.org/downloads/release/python-370/)  [![forthebadge](https://forthebadge.com/images/badges/built-with-science.svg)](https://chemoinfo.ipmc.cnrs.fr/)
 
 **LEA3D** is a de novo design software which allows to optimize the structure of molecules. It is based on the following publications:
-[LEA3D: A Computer-Aided Ligand Design for Structure-Based Drug Design](https://pubs.acs.org/doi/10.1021/jm0492296)
+	[LEA3D: A Computer-Aided Ligand Design for Structure-Based Drug Design](https://pubs.acs.org/doi/10.1021/jm0492296)
 
-[e-LEA3D: a computational-aided drug design web server](https://academic.oup.com/nar/article/38/suppl_2/W615/1099650)
+	[e-LEA3D: a computational-aided drug design web server](https://academic.oup.com/nar/article/38/suppl_2/W615/1099650)
 
-[LEA (Ligand by Evolutionary Algorithm): A Genetic Algorithm for the Automated Generation of Small Organic Molecules](https://link.springer.com/article/10.1023/A:1008108423895)
+	[LEA (Ligand by Evolutionary Algorithm): A Genetic Algorithm for the Automated Generation of Small Organic Molecules](https://link.springer.com/article/10.1023/A:1008108423895)
 
 LEA3D (Ligand by Evolutionary Algorithm) is designed to create new molecules by using a library of molecular fragments (structures in 3D) and by determining best combinations of molecular fragments that fit user-defined physicochemical properties (also called constraint function or fitness function). LEA3D is based on a genetic algorithm that evolves the molecular structures generation after generation until the emergence of fitted molecules. Each molecule of each generation is evaluated thanks to a fitness function (constraints) which can be either molecular properties, an affinity prediction by a docking program…
 
