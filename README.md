@@ -4,6 +4,7 @@ Computer-Aided Molecular Design program
 [![badgepython](https://forthebadge.com/images/badges/made-with-python.svg)](https://www.python.org/downloads/release/python-370/)  [![forthebadge](https://forthebadge.com/images/badges/built-with-science.svg)](https://chemoinfo.ipmc.cnrs.fr/)
 
 **LEA3D** is a de novo design software which allows to optimize the structure of molecules. It is based on the following publications:
+
  [LEA3D: A Computer-Aided Ligand Design for Structure-Based Drug Design](https://pubs.acs.org/doi/10.1021/jm0492296)
 
  [e-LEA3D: a computational-aided drug design web server](https://academic.oup.com/nar/article/38/suppl_2/W615/1099650)
