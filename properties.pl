@@ -234,9 +234,6 @@
 			close(OUT);
 	
 			$f4="tmpi.sdf";
-			#chop($tmpmol2 = `$leaexe/SDF_MOL2.pl tmpi.sdf ` );
-			#rename "tmpi_1.mol2", "tmpi.mol2";
-			#$f3="tmpi.mol2";
 
 			$moli++;	
 			
@@ -323,7 +320,7 @@ sub calprop{
 	$exenbatom=1;
 	$exefsp3=1;
 	
-#================================= Masse
+#================================= MW
 #       $masse
 if($exemm || $exelipinski){
         $prop{mm}=sprintf"%4.2f",$masse;
@@ -334,7 +331,7 @@ if($exenbatom || $exelipinski){
         $prop{nbatom}=$atomlourd;
 };
 
-#================================= Rayon de giration
+#================================= Radius of gyration
 
 if($exeix || $exeiy || $exeiz || $exerg){
         $rgx=0;
@@ -553,7 +550,7 @@ elsif(($exeix || $exeiy || $exeiz || $exelength) && $oldfashion==1){
         $prop{iz}=sprintf"%4.2f",$iz;
 };
 
-#================================= Nombre de Ha et Hd
+#================================= NBHA and NBHD
 if($exenbha || $exenbhd || $exelipinski){
 
         $nbha=0;
@@ -587,10 +584,10 @@ if($exefsp3){
 	#print "Csp3 = $fsp3 ; Ctot = $nbc ; fsp3 = $prop{fsp3}\n";
 };
 
-#================================= LogP by XLOGP (atomic contribution by Wang et al.)
+#================================= LogP 
 if($exelogp || $exelipinski){
 
-#now uses rdkit MolLogP	
+# uses rdkit MolLogP	
 
 	if(-e $f4){
 		chop($tmplog=`python $leaexe/rdkit-MolLogP.py $f4`);

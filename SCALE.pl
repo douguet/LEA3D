@@ -10,8 +10,7 @@ sub scale{
 	$min=$param{SCALEMIN};
 
 #***********************************************************************
-#	MISE A JOUR DE LA PROBABILITE DES PARENTS
-#	Poids de chaque individus attribue selon le score
+#	UPDATE probabilities
 #***********************************************************************
 
 	$sumscore=0;

@@ -574,18 +574,6 @@ sub fonction{
 	print "FUNCTIONS: $prop2\n";# if($param{VERBOSITY} >= 1);
 	$prop2;
 
-#	$prop3=0;
-#	@listfonc=split('_',$listefonction);
-#	$llistfonc=@listfonc;
-#	$fract=1/$llistfonc;
-#	foreach $lfi (0..@listfonc-1){
-#		if($prop2 =~ /$listfonc[$lfi]/){
-#			$prop3=$prop3+$fract;
-#			print"$listfonc[$lfi] OK ($prop3)\n" if($param{VERBOSITY} >= 1);
-#		};
-#	};
-#	$prop3;
-	
 };
 
 

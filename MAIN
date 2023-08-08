@@ -1,7 +1,6 @@
 #!/usr/bin/perl
 
 $current_time = localtime;
-#initiation du generateur de nombre aleatoire
 srand(time ^ $$ ^ unpack "%L*", 'ps axww | gzip');
 
 $leaexe=$0;
@@ -29,12 +28,6 @@ if ($inputfile eq ''){
 
 $leafgt=$leaexe."/LEGO";
 
-# Set in Runlea.csh or Runlea.bash
-#$flexxexe=$ENV{LEA_FLEXX};
-#$convertor=$ENV{LEA_CONVERTOR};
-#$surflexexe=$ENV{LEA_SURFLEX};
-#$plantsexe=$ENV{LEA_PLANTS};
-
 $convertor=$leaexe."/rdkit-confs.py";
 
 $inputfileold=$inputfile;
@@ -59,12 +52,7 @@ elsif($inputfile eq "-r"){
 };
 
 
-################################################ INFO sur pgm
-
-#$whoami='';
-#chop($whoami = `whoami` );
-#$hostname='';
-#chop($hostname = `hostname` );
+################################################
 
 if($inputfile eq "-i"){
 
@@ -80,8 +68,6 @@ Ligand by Evolutionary Algorithm
 
 Author: D. Douguet
 
-Further information contact: douguet\@ipmc.cnrs.fr
-
 ########################################################################
 
 References:
@@ -89,14 +75,12 @@ References:
 Douguet D., Munier-Lehmann H., Labesse G. and
 Pochet S., LEA3D: A Computer-Aided Ligand Design for
 Structure-Based Drug Design, J. Med. Chem., 2005, 48, 2457-2468.
+doi: 10.1021/jm0492296
 
 Douguet D., Thoreau E. and Grassy G., LEA (Ligand by Evolutionary
 Algorithm): A Genetic Algorithm for the Automated Generation of
 Small Organic Molecules, J. Comput.-Aided  Mol. Design, 2000, 14, 449-466.
-
-########################################################################
-
-For further explanations see manual.pdf in the installation directory
+doi: 10.1023/A:1008108423895
 
 ########################################################################
 
@@ -110,13 +94,11 @@ lea     -r      <ligand.in>
 
 lea     <ligand.in>
 
-lea     -v      <ligand.in>    <file with one molecule per line (e.g.: 1*7-2*4 / 2456 3682)>
-
+lea     -v      <ligand.in>    <file with one molecule per line (e.g.: 1*5-3*1_1*6-2*1 /  16 1220 1361 )>
 
 ########################################################################
 \n";
 
-	#system("echo \"$text\" | more $leaexe/Runlea.bash");
 	print "$text";
 	die "\n";
 };	
@@ -180,18 +162,6 @@ unlink "edesign.sdf" if(-e "edesign.sdf");
 		'LEGODB',1,
 	);
 
-	#2022 new
-        #$param{LEGODB} if set to 1 then if opimischild==1 the mutation operation of type "replace" searches similar lego
-        #can be used only datablocks exist and (eg: lego are generated using LEA3D tools)
-
-	# PARAMETERS that have been stripped from ligand.in
-	#$param{UNIX} and $param{LINUX}
-	#$param{SCALEMAX} and $param{SCALEMIN}
-	#$param{PROBA_CROSS} and $param{PROBA_MUT}
-
-	#$workdir_bis='';
-	#chop($workdir_bis = `pwd` );
-	#$param{WORKDIR}=$workdir_bis;
 	$param{WORKDIR}=".";
 	print "WORKING DIRECTORY : $param{WORKDIR}\n" if($param{VERBOSITY} > 0);
 	
@@ -994,15 +964,6 @@ if($optionlea eq ""){
 							system("mkdir $protdir[$docki]");
 						};
 						
-						#DISABLED if($docki==0){
-							# Calcul de la surface accessible au solvant
-							# sub sas_protein in DOCKING.pl
-							# change to area (ASA) dec 2004
-							#&sas_protein($prot[0]);
-							#$prot_arearef=$prot_area;
-							#print "\nProtein: area = $prot_arearef\n\n";
-						#};
-						
 						if($docki>0){
 							$fprop[$i]="";
 							$fmin[$i]="";
@@ -1288,7 +1249,7 @@ if($optionlea eq ""){
     	
 
 #*************************************************************************
-#		     INSTRUCTIONS DU PROGRAMME PRINCIPAL
+#		     MAIN PROGRAM
 #*************************************************************************
 
 	$generation=0;
@@ -1463,22 +1424,10 @@ if($optionlea eq ""){
 						$memo_score[$memoi]=$score[$ranking[1]];
 						$memo_properties[$memoi]=$properties[$ranking[1]];
 						
-						#dvt
-						#print "properties=\n$memo_properties[$memoi]\n";	
 					}
 					else{
 						$memo_remark[$memoi]=$memo_remark[$memoi]."build failed\n" if(!-e "mol.sdf");
 					};
-
-				#}#if($generation==0
-				#else{
-					# global memory
-					#$memo_conf[$memoi]=
-					#$memo_nbconf[$memoi]=
-					#$memo_sdf[$memoi]=
-					#$memo_score[$memoi]=
-					#$memo_properties[$memoi]=
-					#$memo_remark[$memoi]=
 
 					#STUDIES on operator efficiency
 					$op_score[$gi]=sprintf"%4.2f",($scorepop[$gi]-$op_scorep[$gi]);
@@ -1663,11 +1612,6 @@ if($optionlea eq ""){
 				$nbconformer=&nbsdf("mol.sdf");
 				$nbconformer=~s/ //g;
 
-				# mol2 not necessary
-				#print "Convert $file($nbconformer conformers) into .mol2 by SDF_MOL2.pl\n" if($param{VERBOSITY} >= 1);
-				#chop($rep3=`$leaexe/SDF_MOL2.pl mol.sdf`);
-				#print "$rep3\n" if($param{VERBOSITY} >= 1);
-
 				# score (expressed in %) of conformers into @score, ranking in @ranking (in decreasing order)
 				&score("mol.sdf",$nbconformer);
 				print "Molecule $gi2: best conformer is number $ranking[1] / $nbconformer with score=$score[$ranking[1]]\%\n";
@@ -1685,7 +1629,6 @@ if($optionlea eq ""){
 				$memo_score[$gi]=$score[$ranking[1]];
 				$memo_properties[$gi]=$properties[$ranking[1]];
 			};	
-			#system("rm -f  mol_*.mol2");
 			unlink "mol.sdf" if(-e "mol.sdf");
 		};
 
@@ -2083,50 +2026,27 @@ sub diversity{
 	print "\nedesign.sdf contains all correctly converted molecules\n";
 	print "popopop.txt contains the lastest population - can be read as starting pool when using the START option\n";
 
-################# COMMENT  ##########################
-
-	# remove duplicates
-	#chop($tmplog=`$leaexe/CLASS_FGT.pl edesign.sdf key_edesign - unique_edesign.sdf 0`);
-	#chop($tmpnb = `$leaexe/NBSDF.pl unique_edesign.sdf` );
-	#print "\nNumber of unique molecules = $tmpnb\n";
-
-	# calculate sammon
-	#chop($tmplog=`$leaexe/properties.pl unique_edesign.sdf 0`);
-	#chop($tmplog=`$leaexe/extract_list_sdf.pl SCORE`);
-	#print "\n list_SCORE.lst contains scores of unique_edesign.sdf molecules\n";
-
-	#chop($tmplog=`$leaexe/DIVERSITY/sammon.pl properties.out`);
-	#chop($tmplog=`$leaexe/DIVERSITY/fly.pl sammon.out 2 3 0 0 diversity diversity`);
-
-	#print "\nSee fly.gif for the diversity map\n";
-	
-##########################################################
 };
 
 
 #*************************************************************************
 #*************************************************************************
 
-
-
 sub visuinit{
 	
 #local($title)=@_;
 
 	if($optionlea eq ""){
-#$title="<CENTER>eDesign: genetic algorithm over $param{GENMAX} generations</CENTER><P>\n<a href=\"./list.sdf\">Download the best molecule(s) of each generation (concatenated SDF file)</a><P>\n<a href=\"./list.lst\">list.lst</a><P>\n<TABLE class=\"tx1b\" bordercolor=\"#5C6785\" border=1 cellspacing=\"1\" cellpadding=\"3\" ><TR bgcolor=\"#C0C0C0\" align=\"center\"><TD>Generation number</TD><TD>Rank by decreasing order</TD><TD>File name in VISU</TD><TD>Score (%)</TD><TD>Molecular Properties</TD><TD>Molecular Composition</TD><TD>Remarks</TD><TR><P>";
 
 $title="<CENTER>eDesign: genetic algorithm over $param{GENMAX} generations</CENTER><P>\n<TABLE class=\"tx1b\" bordercolor=\"#5C6785\" border=1 cellspacing=\"1\" cellpadding=\"3\" ><TR bgcolor=\"#C0C0C0\" align=\"center\"><TD>Generation number</TD><TD>Rank by decreasing order</TD><TD>File name in VISU</TD><TD>Score (%)</TD><TD>Molecular Properties</TD><TD>Molecular Composition</TD><TD>Remarks</TD><TR><P>";
 		
 	}
 	elsif($optionlea eq "-e"){
-#$title="<CENTER>eDesign: evaluation of $evalfile</CENTER><P>\n<a href=\"./list.sdf\">Download hits having score > 0% (concatenated SDF file)</a><P>\n<a href=\"./list.lst\">list.lst</a><P>\n<TABLE class=\"tx1b\" border=1 cellspacing=\"1\" cellpadding=\"3\" bordercolor=\"#5C6785\"><TR bgcolor=\"#C0C0C0\" align=\"center\"><TD>Rank</TD><TD>File name in VISU</TD><TD>Score (%)</TD><TD>Molecular Properties</TD><TD>Molecular Data (if any)</TD><TD>Remarks</TD><TR><P>";
 
 $title="<CENTER>eDesign: evaluation of $evalfile</CENTER><P>\n<TABLE class=\"tx1b\" border=1 cellspacing=\"1\" cellpadding=\"3\" bordercolor=\"#5C6785\"><TR bgcolor=\"#C0C0C0\" align=\"center\"><TD>Rank</TD><TD>File name in VISU</TD><TD>Score (%)</TD><TD>Molecular Properties</TD><TD>Molecular Data (if any)</TD><TD>Remarks</TD><TR><P>";
 	
 	}
 	elsif($optionlea eq "-r"){	
-#$title="<CENTER>eDesign: libray design</CENTER><P>\n<a href=\"./list.sdf\">Download the library (concatenated SDF file)</a><P>\n<a href=\"./list.lst\">list.lst</a><P>\n<TABLE class=\"tx1b\" border=1 bordercolor=\"#5C6785\" cellspacing=\"1\" cellpadding=\"3\" ><TR bgcolor=\"#C0C0C0\" align=\"center\"><TD>Rank</TD><TD>File name in VISU</TD><TD>Score (%)</TD><TD>Molecular properties</TD><TD>Molecular Composition<P>0 is $param{SCAFFOLD}<P>followed by the reagent number in $param{GET_POOL}</TD><TD>Molecular Data<P>(if exists)</TD><TD>Remarks</TD><TR><P>";
 
 $title="<CENTER>eDesign: libray design</CENTER><P>\n<TABLE class=\"tx1b\" border=1 bordercolor=\"#5C6785\" cellspacing=\"1\" cellpadding=\"3\" ><TR bgcolor=\"#C0C0C0\" align=\"center\"><TD>Rank</TD><TD>File name in VISU</TD><TD>Score (%)</TD><TD>Molecular properties</TD><TD>Molecular Composition<P>0 is $param{SCAFFOLD}<P>followed by the reagent number in $param{GET_POOL}</TD><TD>Molecular Data<P>(if exists)</TD><TD>Remarks</TD><TR><P>";
 
@@ -2144,20 +2064,18 @@ $title="<CENTER>eDesign: libray design</CENTER><P>\n<TABLE class=\"tx1b\" border
 		unlink "$param{WORKDIR}/VISU/visu.html" if(-e "$param{WORKDIR}/VISU/visu.html");
 	};
 
-	#strict minimum
-	#system("cp $leaexe/JMOL/visu.html $param{WORKDIR}/VISU/.");
-	#system("cp $leaexe/JMOL/visul.html $param{WORKDIR}/VISU/.");
-	#system("cp $leaexe/JMOL/JmolApplet.jar $param{WORKDIR}/VISU/.");	
-	#system("cp $leaexe/JMOL/Jmol.js $param{WORKDIR}/VISU/.");
-	#system("cp $leaexe/JMOL/Jmol.jar $param{WORKDIR}/VISU/.");
-	
 	#copy full version
 	if($platform eq "linux" || $platform eq "darwin"){
 		system("cp -r $leaexe/JMOL/* $param{WORKDIR}/VISU/.");
 		#system("cp -r $leaexe/JMOL/jsmol $param{WORKDIR}/VISU/.");
 	}
 	else{
-		print "$platform: program will overwrite the folder VISU \n";
+		if(!-e "$param{WORKDIR}/VISU"){
+			die "Create the directory VISU (it will contain the result file list.sdf)\n";
+		}
+		else{
+			print "$platform: program will overwrite the folder VISU \n";
+		};
 		#system("copy $leaexe/JMOL/* $param{WORKDIR}/VISU/.");
 	};
 
@@ -2483,19 +2401,6 @@ sub getsimilarlego {
         $car=$whichfgtbis;
         $nocc=$car=~s/ $whichlego\*/ $whichlego\*/g;
         $nbxwhichlego=$nocc;
-        #$nbxwhichlego=0;
-        #@getfgt=split('_',$whichmol);
-        #foreach $ani (0..@getfgt-1){
-        #        @getfgt2=split('-',$getfgt[$ani]);
-        #        foreach $anj (0..@getfgt2-1){
-        #               @getfgt3=split('\*',$getfgt2[$anj]); # in @getfgt3 0 = no fgt and in 1 = connecting atom
-        #                       if($getfgt3[0]==$whichlego){
-        #                               $nbxwhichlego++;
-        #                       };
-        #               };
-        #};
-        #print "Mol with lego $whichlego (=$tolego) linked with $nbxwhichlego other legos\n";
-        #print "cycle=$legoc[$tolego] nba=$legonba[$tolego] lip=$legolip[$tolego]\n";
 
         $lelego_list="";
         for $fi (1..$legoi){

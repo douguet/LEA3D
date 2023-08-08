@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-### Combine deux fragments et ecrit la structure dans file_out
+### Combines two fragments and writes structure
 ### link2mol(file1,atom1,file2,atom2,option) 
 #   Move file1 only to connect file2 if $origin==0 or ==2 else don't move (option 1 that uses <ORIGIN>]
 #   $origin=0 use number of atoms to link fragments or use the first X if number of atoms are set to 0
@@ -172,8 +172,6 @@ while (<IN>){
 					$nbond1=$coller[3].$coller[4];
 				};
 			};
-			#print "1_ $nbatom1, $nbond1\n" if($param{VERBOSITY} >= 2);
-			#$compt++;
 		};
 
 		if ($j > $nbond1 && $_=~/^>/ && $_=~/ORIGIN/){
@@ -203,7 +201,6 @@ while (<IN>){
 close(IN);
 
 #print "lego1 @lego1\n";
-
 
 ######################################
 ## RECHERCHE FGT 2
@@ -361,7 +358,6 @@ while (<IN>){
 					$nbond2=$coller[3].$coller[4];
 				};
 			};
-			#print "2_ $nbatom2, $nbond2\n" if($param{VERBOSITY} >= 2);
 			$compt++;
 		};
 	
@@ -391,12 +387,6 @@ while (<IN>){
 	};
 };
 close(IN);
-
-#print "lego2 @lego2\n";
-#if($origin){
-	#print "ORIGIN $lignedata and POINTS $pointsfgt1\n";
-	#print "ORIGIN $lignedata2 and POINTS $pointsfgt2\n";
-#};
 
 ###########################################################
 
@@ -565,8 +555,6 @@ if($origin ==1 && $tabiatom1[0] ne "" && $tabiatom2[0] ne ""){
 	};
 	
 	if($tetab > 0.5){
-	#if($tetab > 30){#modify may 2020 to build bioisoster replacement
-	#die "in ORIGIN option, Angle(vecteur1,vecteur2) $tetab doit etre proche de 0 !!\n";
 		print "warning: in ORIGIN option, Angle(vecteur1,vecteur2) $tetab must be close to 0.0\n";
 	};
 
@@ -587,8 +575,6 @@ if($origin==0 || $origin==2){
 
 	########  TRANSLATION sur iatom1
 
-	#print "H sub = $corx1[$iatom1],$cory1[$iatom1],$corz1[$iatom1]\n";
-	#print "1_C = $corx2[$l2],$cory2[$l2],$corz2[$l2]\n";
         $dx=$corx2[$l2]-$corx1[$iatom1];
         $dy=$cory2[$l2]-$cory1[$iatom1];
         $dz=$corz2[$l2]-$corz1[$iatom1];
@@ -600,8 +586,6 @@ if($origin==0 || $origin==2){
                 $cory2[$j]=$cory2[$j]-$dy;
                 $corz2[$j]=$corz2[$j]-$dz;
         };
-
-	#print "2_C = $corx2[$l2],$cory2[$l2],$corz2[$l2]\n";
 
 	#print"translation $dx, $dy, $dz\n";
 
@@ -641,7 +625,7 @@ if($origin==0 || $origin==2){
         $tetab=atan2(sqrt($testcos),$cosangle)*180.0/3.14159;
 
 	#print"vecteur1($ux,$uy,$uz),vecteur2($vx,$vy,$vz)\n";
-	#print"AVANT angle(vecteur1,vecteur2) $tetab\n";
+	#print"Before angle(vecteur1,vecteur2) $tetab\n";
 
 ########################################
 # Vecteur normes
@@ -717,20 +701,6 @@ if($origin==0 || $origin==2){
         	$y1=$xrot*$uy + $yrot*$ky + $zrot*$wy;
         	$z1=$xrot*$uz + $yrot*$kz + $zrot*$wz;
 
-#########################################
-#24Jan2017 comments:	#only atom defining vector u has to be *$nu because $x, $y and $z have been calculated with $du (normalized instead of $corx1[$l1] .... 
- #       $corx1[$l1]=$x1*$nu;
- #       $cory1[$l1]=$y1*$nu;
- #       $corz1[$l1]=$z1*$nu;
-#
-#       print"corx1[l1] $corx1[$l1],$cory1[$l1],$corz1[$l1]\n";
-#$cosangle=(($corx1[$l1]*$corx2[$iatom2])+($cory1[$l1]*$cory2[$iatom2])+($corz1[$l1]*$corz2[$iatom2]))/(sqrt($corx1[$l1]**2+$cory1[$l1]**2+$corz1[$l1]**2))/(sqrt($corx2[$iatom2]**2+$cory2[$iatom2]**2+$corz2[$iatom2]**2));
-#$angle=atan2(sqrt(1-$cosangle*$cosangle),$cosangle)*180.0/3.14159;
-#print"vecteur1($corx1[$l1],$cory1[$l1],$corz1[$l1]),vecteur2($corx2[$iatom2],$cory2[$iatom2],$corz2[$iatom2])\n";
-#print"APRES angle(vecteur1,vecteur2) $angle\n";
-#
-
-
 #######################################
 # pour toutes les autres coordonnees :
 # On a besoin de teta, u, k et w
@@ -769,17 +739,6 @@ if($origin==0 || $origin==2){
 			#print"$corx1[$o],$cory1[$o],$corz1[$o]\n";
 			#print"\n";
 		}; 
-	}
-	else{
-	#IF VECTORS ARE ALIGNED:
-
-        	foreach $o (1..$nbatom1){
-		# inverse les coordonnees
-		#Nothing to do perfect position : comments 24Jan2017
-                	#$corx1[$o]=$corx1[$o]*-1;
-                	#$cory1[$o]=$cory1[$o]*-1;
-                	#$corz1[$o]=$corz1[$o]*-1;
-        	};
 	};
 
 	foreach $o (1..$nbatom1){
@@ -1111,12 +1070,6 @@ else{ #$origin != 0 and $origin != 2
 		$newposr=$nbatom1-2+$posr;
 	};
 
-	#modif 6 mai 2008
-	#printf OUTC "> <ID> ($moli)\n";
-	#printf OUTC "$moli\n";
-	#printf OUTC "\n";
-	
-	#modif 6 mai 2008
 	if($origin != 2){
 		printf OUTC "> <FGT>\n";
 		printf OUTC "$file1 $noatom1 $file2 $noatom2\n";
@@ -1145,9 +1098,6 @@ else{ #$origin != 0 and $origin != 2
 		     	@spptfgt=split('-',$pointsfgt2);
 			$spptfgtvu =0;
 		     	foreach $sppi (0..@spptfgt-1){
-				#print "B 2 $l2 == $spptfgt[$sppi] and $l1 and $spptfgto[$sppi]\n";
-				#nov2021
-				#if($l2 == $spptfgt[$sppi] && ( $spptfgto[$sppi] eq "$l2_$l1" || $spptfgto[$sppi] eq "$l1_$l2" ) && $spptfgtvu ==0){
 				if($l2i==-1 && $l2 == $spptfgt[$sppi] && ( $spptfgto[$sppi] eq "$l2_$l1" || $spptfgto[$sppi] eq "$l1_$l2" ) && $spptfgtvu ==0){
 					$spptfgt[$sppi]="";
 					$spptfgto[$sppi]="";
@@ -1199,9 +1149,6 @@ else{ #$origin != 0 and $origin != 2
 			@spptfgt=split('-',$pointsfgt1);
 			$spptfgtvu =0;
 		     	foreach $sppi (0..@spptfgt-1){
-				#print "B 1 $l1 == $spptfgt[$sppi]\n";
-				#nov2021
-				#if($l1 == $spptfgt[$sppi] && ($spptfgto[$sppi] eq "$l1_$l2" || $spptfgto[$sppi] eq "$l2_$l1") && $spptfgtvu ==0){
 				if($l1i==-1 && $l1 == $spptfgt[$sppi] && ($spptfgto[$sppi] eq "$l1_$l2" || $spptfgto[$sppi] eq "$l2_$l1") && $spptfgtvu ==0){
 					$spptfgt[$sppi]="";
 					$spptfgto[$sppi]="";

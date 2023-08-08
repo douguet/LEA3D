@@ -5,8 +5,6 @@
 import os, sys
 from rdkit import Chem
 from rdkit.Chem import AllChem
-#import numpy as np
-#from subprocess import Popen,PIPE
 
 # sys.argv[0] is the name of the program itself
 molecule=sys.argv[1]

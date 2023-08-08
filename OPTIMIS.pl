@@ -79,8 +79,6 @@ sub optimis{
 
 
 	if(! -e $fileco || -z $fileco){
-		# Si $fileco n'a pas ete cree alors pas d'optimisation reussie
-		# et donc utilisation de $file non optimise
 		print "WARNING: optimization failed, use $file \n";
 		$memo_remark[$memoi]=$memo_remark[$memoi]."optimization failed (use the non optimized sdf file)\n" if((!-e $fileco || -z $fileco) && $memo_remark[$memoi] !~/optimization failed/);
 	}
