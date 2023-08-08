@@ -50,9 +50,9 @@ Retrieve and unzip LEA3D repository in your desired folder. See below for runnin
 
 Install:
 
-1. Python 3.7 and numpy
+1. Python 3.7 and Perl
 
-2. RDKit
+2. RDKit package (more information at https://www.rdkit.org/docs/Install.html)
 
 3. PyMOL (a molecular viewer; more information at https://pymolwiki.org)
 
