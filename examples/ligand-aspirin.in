@@ -88,6 +88,8 @@ GET_POOL  0
 #This option is useful to begin with user-defined molecules to derive them in new ones
 #START list_mol_sulfapyridine_aspirin_venetoclax
 #START popopop.txt
+#To start with FDA approved drugs (file in LEGO folder):
+#START stemdrug.txt
 #in default case, it is not activated:
 START 0
 
