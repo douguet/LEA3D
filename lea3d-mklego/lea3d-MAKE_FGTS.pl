@@ -614,12 +614,6 @@ if ($nbcf > 0){
 		@cycleff=@reduit;
 		$nbcf=@cycleff;
 
-#		foreach $lc2 (0..$nbcf-1){
-#			print"$cycleff[$lc2]\n";
-#		};
-#	print "$nbcf systemes fusionnes\n";
-#	print "\n";
-
 		
 ################################################################		
 # SPECIAL CASES: ring systems linked by double bonds
@@ -993,11 +987,6 @@ foreach $lc (0..$nbcf-1){
 			$nhetat=0;
 			$nar=0;
 
-			#printf OUTC "\n";
-			#printf OUTC "  -ISIS-  08029913582D\n";
-			#printf OUTC "\n";
-			#printf OUTC "%3s%3s  0  0  0  0  0  0  0  0999 V2000\n",$longa,$longb;
-
 			$new_coord[0]="\n";
 			$new_coord[1]="  -ISIS-  08029913582D\n";
 			$new_coord[2]="\n";
@@ -1310,21 +1299,6 @@ foreach $lc (0..$nbcf-1){
 				$nar++ if ($getnar[2] == 2);
 			};
 			 
-			#printf OUTC "M  END\n";
-			#printf OUTC ">  <ncycles> (1)\n";
-			#printf OUTC "$nbfusion\n";
-			#printf OUTC "\n";
-			#printf OUTC ">  <natomescycle> (1)\n";
-			#printf OUTC "$longa\n";
-			#printf OUTC "\n";
-			#printf OUTC ">  <cyclearom> (1)\n";
-			#printf OUTC "$nar\n";
-			#printf OUTC "\n";
-			#printf OUTC ">  <nhetat> (1)\n";
-			#printf OUTC "$nhetat\n";
-			#printf OUTC "\n";
-			#printf OUTC "\$\$\$\$\n";
-		
 		if($new_coordspecial eq ''){
 			print OUTC "$new_coord[0]";
 			print OUTC "$new_coord[1]";
@@ -1544,12 +1518,6 @@ open(OUTD,">>special_tmp.sdf");
 			
 			if ($cyclefp[$lc] ne ''){
 
-				#printf OUTC "\n";
-				#printf OUTC "  -ISIS-  08029913582D\n";
-				#printf OUTC "\n";
-				#printf OUTC "%3s%3s  0  0  0  0  0  0  0  0999 V2000\n",$long,$long;
-				
-				
 				$new_coord[0]="\n";
 				$new_coord[1]="  -ISIS-  08029913582D\n";
 				$new_coord[2]="\n";
@@ -1927,9 +1895,6 @@ open(OUTD,">>special_tmp.sdf");
 				};
 
 				$speciali=$speciali+$long;
-				#print "speciali= $speciali in neww_coord\n";
-				#print "specialib= $specialib in addh\n";
-				#print "total = longa = $longa atoms\n";
 
 			};#end foreach separate by star
 

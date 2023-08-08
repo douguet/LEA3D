@@ -1,15 +1,5 @@
 #!/usr/bin/perl
 
-# UPGRADES that will change the KEY files of databases
-# 18 april 2011: detect phosphines R/S
-# 18 april 2011: detect imines -N=C()()  trans/cis
-# Don't take account for symetry like mesoR or mesoS  
-# accept bore atoms December 2016
-# -CO2 corrected Jan2017	
-# Pb in recursivity in C*: refeuille3 corrected
-
-# FOR DEBUGGING : set debug=1 and debog=1
-
 #Keep the following print as the reply to the require perl function
 print "";
 
@@ -293,11 +283,6 @@ sub keymol2{
 			$moli=~s/\)//;
 		};
 		
-		#if ($_=~/>/ && ($_=~/CAS/ || $_=~/ID/ || $_=~/ENTRY/ || $_=~/code_number/ || $_=~/REGNO/ || $_=~/COMP_NAME/ || $_=~/NOM/ || $_=~/NAME/)){
-		#	    $getinfo=1;
-		#    $info=$info." $getstr[1] $getstr[2]";
-		#};
-		
 		if ($_=~/>/ && $_=~/MDLNUMBER/){
 			$getinfo=1;	
 		};	
@@ -579,10 +564,6 @@ if(($cyclef[0] ne "" && $framework) || $framework==0){# if acyclic then skipped 
 				
 				$type[$bi]="N.pl3" if($p >=1 && $sicycle==1 && $noncycle==1);
 				
-				#$type[$bi]="N.pl3" if($p >=1 && $sicycle==1 && $noncycle==0 && $nocc==1 && @arom==6);
-				#$type[$bi]="N.pl3" if($p >=1 && $sicycle==1 && $noncycle==0 && $nocc==1 && @arom==5);
-				#$type[$bi]="N.pl3" if($p >=1 && $sicycle==1 && $noncycle==0 && $noccb>=2);
-				
 				
 			}  #si NO2
 			elsif($atom[$bi] eq 'N' && $type[$bi] eq 'N.2'){
@@ -663,26 +644,7 @@ if(($cyclef[0] ne "" && $framework) || $framework==0){# if acyclic then skipped 
 
 	$blanc=' ';
 	$f4="mol$moli.mol2";
-	#open(OUTC,">$f4");
-	
-		if($info ne ''){
-			#print OUTC "#	  Creating by LEA \n";
-			#print OUTC "#  $info \n";
-			#print OUTC "#\n";
-		}
-		else{
-			#print OUTC "#\n";
-			#print OUTC "#	  Creating by LEA \n";
-			#print OUTC "#\n";
-		};
 		
-		#print OUTC "\n";
-		#print OUTC "@<TRIPOS>MOLECULE\n";
-		#print OUTC "mol$moli\n";
-		#printf OUTC "%4s%1s%4s\n",$istratom,$blanc,$istrbond;
-		#print OUTC "SMALL\n";
-		#print OUTC "NO_CHARGES\n\n\n";
-		#print OUTC "@<TRIPOS>ATOM\n";
 		foreach $bi (1..$istratom){
 			$a1=$bi;
 			$a2="$atom[$bi]$bi";
@@ -932,10 +894,6 @@ if(($cyclef[0] ne "" && $framework) || $framework==0){# if acyclic then skipped 
 
 
 		};
-		#print OUTC "@<TRIPOS>SUBSTRUCTURE\n";
-		#print OUTC "      1 mol$moli             1 ****\n";
-	#close(OUTC);
-	
 	
 $debug=0;	
 	
@@ -1039,10 +997,6 @@ $debug=0;
 	@no_node='';
 	@node_assym='';
 	@czore='';
-	#print "$istratom atoms\n";
-	#print "@type\n";
-	#print "@atom\n";
-	#print "@atomx\n";
 
 	foreach $bi (1..$istratom){
 		        $type[$bi]=$atomx[$bi] if($atomx[$bi] eq 'X' && $eltx eq "X");
@@ -1335,13 +1289,6 @@ $debug=0;
 		};
 	};
 
-	#print "graphe: \n";
-	#foreach $bi (1..$istratom){
-		#$graphe[$bi]=$type[$bi]."_".$node[$bi];
-		#print "$graphe[$bi]\n";
-		#print "$bi) $no_node[$bi]\n\n";
-	#};
-	
 	@no_node2=@no_node;   # concatenation feuilles avec blanc
 	@node2=@node;
 	@no_node3=@no_node; # origin premieres feuilles
@@ -1386,9 +1333,6 @@ $debug=0;
 		$longget=@get;
 		$bip=$bi."_";
 		$no_node[$bi]=~s/^ $bi/$bip/;
-		#print "carbon no $bi assym ? : $node_assym[$bi]\n" if($node_assym[$bi] != 0);
-		#print "$node[$bi]\n";
-		#print "$bi) $no_node[$bi] ($longget atoms)\n\n";
 	};
 	
 	foreach $bi (1..$istratom){
@@ -1937,23 +1881,6 @@ if($weird==0){
      		};
      };
 
-#	if(!-e "$filekey" || -z "$filekey"){
-#		system("touch $filekey");
-#	};	
-	
-	#open(OUT,">>$filekey");
-	#print OUT "$key1*$key2 $fileopen2 $nombre_molecule\n";
-	#close(OUT);
-     	#print "Mise a jour de $filekey par $fileopen2 $nombre_molecule\n";
-	#print "$fileopen2 $nombre_molecule diff\n";
-     	
-	#$key_b[@key_b]=$key2;
-	#$key_a[@key_a]=$key1;
-	#$origin[@origin]="$fileopen2 $nombre_molecule";
-     	
-	#}
-	#elsif($ajour){
-
 	$info2=$nombre_molecule;	
 	$info2="NO_".$nombre_molecule."_MDLNUMBER_".$info if($info ne "");	
 	
@@ -2307,11 +2234,6 @@ else{
 	#print "APRES angle(vecteur1,vecteur2) $tetab degres\n";
 ## FIN VERIFIE ANGLE
 
- 	#print "$cassymax $cassymay $cassymaz\n";
- 	#print "$cassymbx $cassymby $cassymbz\n";
- 	#print "$cassymcx $cassymcy $cassymcz\n";
- 	#print "$cassymdx $cassymdy $cassymdz\n";
-	
 	@tabcassymx='';
 	@tabcassymy='';
 	@tabcassymz='';
@@ -2707,10 +2629,6 @@ if($ai != $aj){
 			};
 		};#if sumai=sumaj
 
-		#print "\t liste i ($listegrandi)\n";
-		#print "\t liste j ($listegrandj)\n";
-		#print "SORTIE\n";
-
 		if($rescompar == 0){#modif
 			#print "bien entrer $dejacompareri / $dejacomparerj et list $listegrandi / $listegrandj\n";
 			@mmi=split(' ',$listegrandi);#modif
@@ -2979,11 +2897,6 @@ else{
 	#print "APRES angle(vecteur1,vecteur2) $tetab degres\n";
 ## FIN VERIFIE ANGLE
 
- 	#print "$cassymax $cassymay $cassymaz\n";
- 	#print "$cassymbx $cassymby $cassymbz\n";
- 	#print "$cassymcx $cassymcy $cassymcz\n";
- 	#print "$cassymdx $cassymdy $cassymdz\n";
-	
 	@tabcassymx='';
 	@tabcassymy='';
 	@tabcassymz='';
@@ -3022,6 +2935,5 @@ else{
 };
 
 
-
-
-
+###############################################################
+###############################################################
