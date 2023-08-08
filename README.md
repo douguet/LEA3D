@@ -81,7 +81,7 @@ Plot the maximum, minimum and average scores in function of the generation numbe
 
  ![example](/images/best-candidate.png)
 
-The best candidate of the run is shown in the above Figure: it is the last molecule of the file list.sdf
+The best candidate of the run is displayed in the above Figure: it is the last molecule of the file list.sdf of the run.
 
 
 **2. Use lea3d to generate 3 molecules using a pre-defined combination of legos**
