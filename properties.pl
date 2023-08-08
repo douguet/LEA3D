@@ -5,6 +5,7 @@
         $leaexe=~s/properties\.pl$//;
         $leaexe=~s/\/$//;
         #print "perl scripts in $leaexe\n";
+	$platform=$^O;
 
 	local($filesdf)=@ARGV;	
 
@@ -590,7 +591,12 @@ if($exelogp || $exelipinski){
 # uses rdkit MolLogP	
 
 	if(-e $f4){
-		chop($tmplog=`python $leaexe/rdkit-MolLogP.py $f4`);
+		if($platform eq "linux" || $platform eq "darwin"){
+			chop($tmplog=`$leaexe/rdkit-MolLogP.py $f4`);
+                }
+                else{#windows
+			chop($tmplog=`python $leaexe/rdkit-MolLogP.py $f4`);
+                };
 		#chop($tmplog=` $leaexe/rdkit-MolLogP.py $f4`);
 		@getlogp=split(' ',$tmplog);
 		if($getlogp[1] ne ""){

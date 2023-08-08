@@ -11,7 +11,9 @@ sub optimis{
 	$fileco=~s/\.sdf$/co\.sdf/;
 	unlink $fileco;
 	#system("touch $fileco"); #must be initialized !!!
-	
+
+	$platform=$^O;
+
 	$param{NBCONF}=1 if($param{NBCONF} eq "" || $param{NBCONF} < 1);
 	
 	#$convertorfrog=$ENV{LEA_FROG};
@@ -46,7 +48,12 @@ sub optimis{
 		#**************************************************
 		#	RDKIT
 		#**************************************************
-		system("python $convertor $param{WORKDIR}/$file $param{NBCONF} $param{WORKDIR}/$fileco");
+		if($platform eq "linux" || $platform eq "darwin"){
+			system("$convertor $param{WORKDIR}/$file $param{NBCONF} $param{WORKDIR}/$fileco");
+		}
+		else{#windows
+			system("python $convertor $param{WORKDIR}/$file $param{NBCONF} $param{WORKDIR}/$fileco");
+		};
 		#system(" $convertor $param{WORKDIR}/$file $param{NBCONF} $param{WORKDIR}/$fileco");
 	}
 	elsif($convertor eq $convertorrdkitmin){
