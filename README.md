@@ -48,23 +48,24 @@ Retrieve and unzip LEA3D repository in your desired folder. See below for runnin
 
 
 ## Run LEA3D
-Create a folder called "Project", copy the content of the folder “examples” in Project directory and launch conda
+Create a folder called "Project", copy the content of the folder “examples” in Project directory and launch conda.
+Create a folder "VISU" in the folder "Project".
 
  	conda activate lea3d
 
 **1. Use lea3d to design molecules using some molecular properties of the aspirin molecular structure**
 
-In this example, the file ligand-aspirin.in defines parameters of the genetic algorithm (a population of 10 molecules that will evolve over 30 generations) and indicates the fitness function file to read (ligand-aspirin.func). The fitness function includes 4 properties to evaluate (number of atoms, molecular weight, fsp3 value and the presence of 2 chemical functions (ester + acid)).
+In this example, the file ligand-aspirin.in defines parameters of the genetic algorithm (a population of 10 molecules that will evolve over 30 generations) and indicates the fitness function file to read (ligand-aspirin.func). The fitness function includes 4 properties to evaluate (number of atoms, molecular weight, fsp3 value and the presence of 2 chemical functions (ester and acid)).
 
 Execute:
 
-	perl ../lea3d-main/MAIN ligand-aspirin.in
+	perl ../LEA3D-main/MAIN ligand-aspirin.in
 
 The file summary.txt indicates the score of candidate molecules of the last generation ranked in descending order. The file edesign.sdf contains all generated molecules over the run. The file VISU/list.sdf contains the best candidate molecule of each generation. The file popopop.txt contains the encoded molecules of the last generation. The file fitmoy.dat allows to plot the maximum, minimum and average scores in function of the generation number. In addition, the file operator.out records the crossover and mutation operations, indicates the difference in score value and which lego is involved (if any). It allows to analyze the efficiency of each operator. Of note, at the end of the run, the list of the privileged legos that improve candidate molecules is indicated.
 
 Plot the maximum, minimum and average scores in function of the generation number
 
-	python ../lea3d-main/utils/plot-scores.py fitmoy.dat
+	python ../LEA3D-main/utils/plot-scores.py fitmoy.dat
 
  ![example](/images/plot.png)
  
@@ -83,7 +84,7 @@ In this example, the objective is to build molecules that are already encoded wi
 
 Execute:
 
-	perl ../lea3d-main/MAIN -v ligand-aspirin.in list_mol_sulfapyridine-aspirin_venetoclax
+	perl ../LEA3D-main/MAIN -v ligand-aspirin.in list_mol_sulfapyridine-aspirin_venetoclax
  
  To visualize the three generated molecules:
  
@@ -98,7 +99,7 @@ In this example, the objective is to use the program to evaluate the fitness fun
 
 Execute:
 
-	perl ../lea3d-main/MAIN -e ligand-aspirin.in three-molecules.sdf
+	perl ../LEA3D-main/MAIN -e ligand-aspirin.in three-molecules.sdf
 
 The output is written on the screen:
 
