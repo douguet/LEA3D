@@ -12,8 +12,6 @@ sub optimis{
 	unlink $fileco;
 	#system("touch $fileco"); #must be initialized !!!
 
-	$platform=$^O;
-
 	$param{NBCONF}=1 if($param{NBCONF} eq "" || $param{NBCONF} < 1);
 	
 	#$convertorfrog=$ENV{LEA_FROG};
