@@ -46,6 +46,24 @@ Launch Anaconda Prompt, then complete the installation:
 	
 Retrieve and unzip LEA3D repository in your desired folder. See below for running the program. The decompressed directory containing executables is called LEA3D-main.
 
+## Linux
+
+Install:
+
+1. Python 3.7 and numpy
+
+2. RDKit
+
+3. PyMOL (a molecular viewer; more information at https://pymolwiki.org)
+
+
+Retrieve and unzip LEA3D repository in your desired folder. The directory containing executables is called LEA3D-main. See below for running the program MAIN.
+
+
+## MacOS
+
+Not tested
+
 
 ## Run LEA3D
 Create a folder called "Project", copy the content of the folder “examples” in Project directory and launch conda.
