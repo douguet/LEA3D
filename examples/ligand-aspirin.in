@@ -70,6 +70,7 @@ FILTER 0
 #SCAFFOLD building_block.sdf
 #Here, atom 5 or 1 will be linked to a new fragment
 #SCAFFOLD test.sdf 5 1
+#SCAFFOLD scaffold-phenyl-aspirin.sdf 1 6
 #in default case, no scaffold:
 SCAFFOLD 0
 
