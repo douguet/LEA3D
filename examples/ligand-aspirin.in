@@ -28,6 +28,7 @@ FUNCTION ligand-aspirin.func
 
 # Option to convert the fitness function evaluation into a filtering step
 # if > 0 then it means that only molecules possessing score >= SCORE100 % are kept (range[1-100])
+#SCORE100 90
 SCORE100 0
 
 # Specify the conformer optimization of molecules (0 (no) or 1 (yes))
@@ -70,6 +71,7 @@ FILTER 0
 #SCAFFOLD building_block.sdf
 #Here, atom 5 or 1 will be linked to a new fragment
 #SCAFFOLD test.sdf 5 1
+#SCAFFOLD scaffold-phenyl-aspirin.sdf 1 6
 #in default case, no scaffold:
 SCAFFOLD 0
 
