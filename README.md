@@ -12,7 +12,7 @@ LEA3D (Ligand by Evolutionary Algorithm) is designed to create new molecules by 
 Figure 1. General flowchart for LEA3D genetic algorithm.
 An initial population of candidate solutions is generated, usually, by random process but an option allows to start with a pool of molecules. The fitness of each candidate is evaluated via a fitness function (or score), which takes as input a candidate solution and returns a numeric score. Selection criteria are applied to choose candidates based on their fitness score for breeding. Breeding functions, crossover and mutations (suppress, add, replace or permutate a fragment), are applied to produce new solutions that replace the parent solutions. The cycle (or generation g) continues until convergence criteria is met (usually, solutions are no more improved). 
 
-**Here, we provide the core of LEA3D that could be used or customized with new fitness functions and/or libraries of fragments.**
+**Here, we provide the core of LEA3D that could be customized with new fitness functions and/or libraries of fragments.**
 
 **Documentation**: [Manual-LEA3D-core.pdf](https://github.com/douguet/LEA3D/blob/main/docs/Manual-LEA3D-core.pdf)
 
