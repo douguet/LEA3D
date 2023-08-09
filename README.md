@@ -16,7 +16,7 @@ An initial population of candidate solutions is generated, usually, by random pr
 
 **Documentation**: [Manual-LEA3D-core.pdf](https://github.com/douguet/LEA3D/blob/main/docs/Manual-LEA3D-core.pdf)
 
-**Website**: A webserver dedicated to drug design is available at https://chemoinfo.ipmc.cnrs.fr/LEA3D/index.html
+**Website**: A webserver dedicated to de novo drug design is available at https://chemoinfo.ipmc.cnrs.fr/LEA3D/index.html
 
 ## Requirements
 
