@@ -28,6 +28,7 @@ FUNCTION ligand.func
 
 # Option to convert the fitness function evaluation into a filtering step
 # if > 0 then it means that only molecules possessing score >= SCORE100 % are kept (range[1-100])
+#SCORE100 90
 SCORE100 0
 
 # Specify the conformer optimization of molecules (0 (no) or 1 (yes))
