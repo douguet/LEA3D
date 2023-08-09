@@ -20,7 +20,7 @@ An initial population of candidate solutions is generated, usually, by random pr
 
 ## Requirements
 
-LEA3D uses **Perl and Python3.7**. Of note, JavaScript is only used to create html pages to display results. Here, we also use the RDKit package to calculate molecular properties. 
+LEA3D uses **Perl and Python3.7**. Of note, JavaScript is only used to create html pages to display results. Here, we also use the RDKit package to calculate molecular properties and PyMOL to visualize molecules.
 
 
 ## Virtual environment for python with conda (for Windows for example)
